@@ -1,13 +1,14 @@
 #include "voxel_modifier_sphere.h"
 #include "../engine/voxel_engine.h"
 #include "../util/godot/core/packed_arrays.h"
+#include "../util/math/conv.h"
 #include "../util/math/sdf.h"
-#include "../util/memory.h"
+#include "../util/memory/memory.h"
 #include "../util/profiling.h"
 
 namespace zylann::voxel {
 
-void VoxelModifierSphere::set_radius(real_t radius) {
+void VoxelModifierSphere::set_radius(float radius) {
 	RWLockWrite wlock(_rwlock);
 	if (radius == _radius) {
 		return;
@@ -17,7 +18,7 @@ void VoxelModifierSphere::set_radius(real_t radius) {
 	update_aabb();
 }
 
-real_t VoxelModifierSphere::get_radius() const {
+float VoxelModifierSphere::get_radius() const {
 	return _radius;
 }
 
@@ -31,7 +32,7 @@ void VoxelModifierSphere::apply(VoxelModifierContext ctx) const {
 	ZN_PROFILE_SCOPE();
 	RWLockRead rlock(_rwlock);
 	const float smoothness = get_smoothness();
-	const Vector3 center = get_transform().origin;
+	const Vector3f center = to_vec3f(get_transform().origin);
 	const float sdf_scale = 1.0f;
 
 	// TODO Support transform scale
@@ -69,7 +70,7 @@ void VoxelModifierSphere::get_shader_data(ShaderData &out_shader_data) {
 		SphereParams sphere_params;
 		sphere_params.radius = _radius;
 		PackedByteArray pba;
-		copy_bytes_to(pba, sphere_params);
+		zylann::godot::copy_bytes_to(pba, sphere_params);
 
 		if (_shader_data->params.size() < 2) {
 			std::shared_ptr<ComputeShaderResource> res = make_shared_instance<ComputeShaderResource>();

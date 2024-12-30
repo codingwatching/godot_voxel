@@ -15,7 +15,7 @@ using namespace godot;
 #endif
 
 #include "../godot/macros.h"
-#include <iosfwd>
+#include "../string/std_stringstream.h"
 
 namespace zylann {
 namespace Vector3iUtil {
@@ -33,12 +33,15 @@ inline void sort_min_max(Vector3i &a, Vector3i &b) {
 }
 
 // Returning a 64-bit integer because volumes can quickly overflow INT_MAX (like 1300^3),
-// even though dense volumes of that size will rarely be encountered in this module
-inline int64_t get_volume(const Vector3i &v) {
+// even though dense volumes of that size will rarely be encountered in this module.
+inline uint64_t get_volume_u64(const Vector3i &v) {
 #ifdef DEBUG_ENABLED
 	ZN_ASSERT_RETURN_V(v.x >= 0 && v.y >= 0 && v.z >= 0, 0);
 #endif
-	return v.x * v.y * v.z;
+	return math::multiply_check_overflow_u64(
+			static_cast<uint64_t>(v.x),
+			math::multiply_check_overflow_u64(static_cast<uint64_t>(v.y), static_cast<uint64_t>(v.z))
+	);
 }
 
 inline unsigned int get_zxy_index(const Vector3i &v, const Vector3i area_size) {
@@ -103,7 +106,8 @@ inline Vector3i wrap(const Vector3i v, const Vector3i d) {
 
 inline Vector3i clamp(const Vector3i a, const Vector3i minv, const Vector3i maxv) {
 	return Vector3i(
-			math::clamp(a.x, minv.x, maxv.x), math::clamp(a.y, minv.y, maxv.y), math::clamp(a.z, minv.z, maxv.z));
+			math::clamp(a.x, minv.x, maxv.x), math::clamp(a.y, minv.y, maxv.y), math::clamp(a.z, minv.z, maxv.z)
+	);
 }
 
 inline Vector3i abs(const Vector3i v) {
@@ -158,7 +162,7 @@ inline int chebyshev_distance(const Vector3i &a, const Vector3i &b) {
 
 } // namespace math
 
-std::stringstream &operator<<(std::stringstream &ss, const Vector3i &v);
+StdStringStream &operator<<(StdStringStream &ss, const Vector3i &v);
 
 } // namespace zylann
 
@@ -185,6 +189,10 @@ inline Vector3i operator>>(const Vector3i &a, int b) {
 
 inline Vector3i operator&(const Vector3i &a, uint32_t b) {
 	return Vector3i(a.x & b, a.y & b, a.z & b);
+}
+
+inline Vector3i operator%(const Vector3i &a, int b) {
+	return Vector3i(a.x % b, a.y % b, a.z % b);
 }
 
 ZN_GODOT_NAMESPACE_END

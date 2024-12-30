@@ -1,5 +1,7 @@
 #include "test_storage_funcs.h"
 #include "../../storage/funcs.h"
+#include "../../storage/materials_4i4w.h"
+#include "../../util/containers/std_vector.h"
 #include "../testing.h"
 
 namespace zylann::voxel::tests {
@@ -20,8 +22,15 @@ void test_encode_weights_packed_u16() {
 
 void test_copy_3d_region_zxy() {
 	struct L {
-		static void compare(Span<const uint16_t> srcs, Vector3i src_size, Vector3i src_min, Vector3i src_max,
-				Span<const uint16_t> dsts, Vector3i dst_size, Vector3i dst_min) {
+		static void compare(
+				Span<const uint16_t> srcs,
+				Vector3i src_size,
+				Vector3i src_min,
+				Vector3i src_max,
+				Span<const uint16_t> dsts,
+				Vector3i dst_size,
+				Vector3i dst_min
+		) {
 			Vector3i pos;
 			for (pos.z = src_min.z; pos.z < src_max.z; ++pos.z) {
 				for (pos.x = src_min.x; pos.x < src_max.x; ++pos.x) {
@@ -36,12 +45,12 @@ void test_copy_3d_region_zxy() {
 	};
 	// Sub-region
 	{
-		std::vector<uint16_t> src;
-		std::vector<uint16_t> dst;
+		StdVector<uint16_t> src;
+		StdVector<uint16_t> dst;
 		const Vector3i src_size(8, 8, 8);
 		const Vector3i dst_size(3, 4, 5);
-		src.resize(Vector3iUtil::get_volume(src_size), 0);
-		dst.resize(Vector3iUtil::get_volume(dst_size), 0);
+		src.resize(Vector3iUtil::get_volume_u64(src_size), 0);
+		dst.resize(Vector3iUtil::get_volume_u64(dst_size), 0);
 		for (unsigned int i = 0; i < src.size(); ++i) {
 			src[i] = i;
 		}
@@ -89,12 +98,12 @@ void test_copy_3d_region_zxy() {
 	}
 	// Same size, full region
 	{
-		std::vector<uint16_t> src;
-		std::vector<uint16_t> dst;
+		StdVector<uint16_t> src;
+		StdVector<uint16_t> dst;
 		const Vector3i src_size(3, 4, 5);
 		const Vector3i dst_size(3, 4, 5);
-		src.resize(Vector3iUtil::get_volume(src_size), 0);
-		dst.resize(Vector3iUtil::get_volume(dst_size), 0);
+		src.resize(Vector3iUtil::get_volume_u64(src_size), 0);
+		dst.resize(Vector3iUtil::get_volume_u64(dst_size), 0);
 		for (unsigned int i = 0; i < src.size(); ++i) {
 			src[i] = i;
 		}
@@ -113,26 +122,26 @@ void test_copy_3d_region_zxy() {
 void test_transform_3d_array_zxy() {
 	// YXZ
 	int src_grid[] = {
-		0, 1, 2, 3, //
-		4, 5, 6, 7, //
-		8, 9, 10, 11, //
+		0,	1,	2,	3, //
+		4,	5,	6,	7, //
+		8,	9,	10, 11, //
 
 		12, 13, 14, 15, //
 		16, 17, 18, 19, //
 		20, 21, 22, 23 //
 	};
 	const Vector3i src_size(3, 4, 2);
-	const unsigned int volume = Vector3iUtil::get_volume(src_size);
+	const unsigned int volume = Vector3iUtil::get_volume_u64(src_size);
 
 	FixedArray<int, 24> dst_grid;
 	ZN_TEST_ASSERT(dst_grid.size() == volume);
 
 	{
 		int expected_dst_grid[] = {
-			0, 4, 8, //
-			1, 5, 9, //
-			2, 6, 10, //
-			3, 7, 11, //
+			0,	4,	8, //
+			1,	5,	9, //
+			2,	6,	10, //
+			3,	7,	11, //
 
 			12, 16, 20, //
 			13, 17, 21, //
@@ -156,9 +165,9 @@ void test_transform_3d_array_zxy() {
 	}
 	{
 		int expected_dst_grid[] = {
-			3, 2, 1, 0, //
-			7, 6, 5, 4, //
-			11, 10, 9, 8, //
+			3,	2,	1,	0, //
+			7,	6,	5,	4, //
+			11, 10, 9,	8, //
 
 			15, 14, 13, 12, //
 			19, 18, 17, 16, //
@@ -185,9 +194,9 @@ void test_transform_3d_array_zxy() {
 			19, 18, 17, 16, //
 			23, 22, 21, 20, //
 
-			3, 2, 1, 0, //
-			7, 6, 5, 4, //
-			11, 10, 9, 8 //
+			3,	2,	1,	0, //
+			7,	6,	5,	4, //
+			11, 10, 9,	8 //
 		};
 		const Vector3i expected_dst_size(3, 4, 2);
 		IntBasis basis;

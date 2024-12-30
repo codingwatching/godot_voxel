@@ -1,7 +1,7 @@
 #include "node_type_db.h"
 #include "../../util/godot/core/array.h"
 #include "../../util/macros.h"
-#include "../../util/string_funcs.h"
+#include "../../util/string/format.h"
 #include "image_range_grid.h"
 #include "nodes/curve.h"
 #include "nodes/image.h"
@@ -27,12 +27,12 @@ const NodeTypeDB &NodeTypeDB::get_singleton() {
 
 void NodeTypeDB::create_singleton() {
 	CRASH_COND(g_node_type_db != nullptr);
-	g_node_type_db = memnew(NodeTypeDB());
+	g_node_type_db = ZN_NEW(NodeTypeDB());
 }
 
 void NodeTypeDB::destroy_singleton() {
 	CRASH_COND(g_node_type_db == nullptr);
-	memdelete(g_node_type_db);
+	ZN_DELETE(g_node_type_db);
 	g_node_type_db = nullptr;
 }
 
@@ -244,7 +244,7 @@ VoxelGraphFunction::Port make_port_from_io_node(const ProgramGraph::Node &node, 
 }
 
 bool is_node_matching_port(const ProgramGraph::Node &node, const VoxelGraphFunction::Port &port) {
-	if (node.type_id != port.type) {
+	if (node.type_id != static_cast<uint32_t>(port.type)) {
 		return false;
 	}
 

@@ -2,15 +2,15 @@
 #define ZN_CONTAINER_FUNCS_H
 
 #include "span.h"
+#include "std_vector.h"
 #include <cstdint>
-#include <vector>
 
 namespace zylann {
 
 // Takes elements starting from a given position and moves them at the beginning,
 // then shrink the array to fit them. Other elements are discarded.
-template <typename T>
-void shift_up(std::vector<T> &v, unsigned int pos) {
+template <typename T, typename TAllocator>
+void shift_up(std::vector<T, TAllocator> &v, unsigned int pos) {
 	unsigned int j = 0;
 	for (unsigned int i = pos; i < v.size(); ++i, ++j) {
 		v[j] = v[i];
@@ -21,16 +21,16 @@ void shift_up(std::vector<T> &v, unsigned int pos) {
 
 // Pops the last element of the vector and place it at the given position.
 // (The element that was at this position is the one removed).
-template <typename T>
-void unordered_remove(std::vector<T> &v, unsigned int pos) {
+template <typename T, typename TAllocator>
+void unordered_remove(std::vector<T, TAllocator> &v, unsigned int pos) {
 	v[pos] = v.back();
 	v.pop_back();
 }
 
 // Removes all items satisfying the given predicate.
 // This can change the size of the container, and original order of items is not preserved.
-template <typename T, typename F>
-inline void unordered_remove_if(std::vector<T> &vec, F predicate) {
+template <typename T, typename TAllocator, typename F>
+inline void unordered_remove_if(std::vector<T, TAllocator> &vec, F predicate) {
 	for (unsigned int i = 0; i < vec.size(); ++i) {
 		if (predicate(vec[i])) {
 			vec[i] = vec.back();
@@ -42,8 +42,8 @@ inline void unordered_remove_if(std::vector<T> &vec, F predicate) {
 	}
 }
 
-template <typename T>
-inline bool unordered_remove_value(std::vector<T> &vec, T v) {
+template <typename T, typename TAllocator>
+inline bool unordered_remove_value(std::vector<T, TAllocator> &vec, T v) {
 	for (size_t i = 0; i < vec.size(); ++i) {
 		if (vec[i] == v) {
 			vec[i] = vec.back();
@@ -54,8 +54,8 @@ inline bool unordered_remove_value(std::vector<T> &vec, T v) {
 	return false;
 }
 
-template <typename T>
-inline void append_array(std::vector<T> &dst, const std::vector<T> &src) {
+template <typename T, typename TAllocator1, typename TAllocator2>
+inline void append_array(std::vector<T, TAllocator1> &dst, const std::vector<T, TAllocator2> &src) {
 	dst.insert(dst.end(), src.begin(), src.end());
 }
 
@@ -85,28 +85,44 @@ inline void remove_if(std::vector<T> &vec, F predicate) {
 }
 */
 
+struct DuplicateSearchResult {
+	size_t first;
+	size_t second;
+
+	inline bool is_null() const {
+		return first == second;
+	}
+
+	inline bool is_valid() const {
+		return !is_null();
+	}
+};
+
 template <typename T>
-size_t find_duplicate(Span<const T> items) {
+DuplicateSearchResult find_duplicate(Span<const T> items) {
 	for (unsigned int i = 0; i < items.size(); ++i) {
 		const T &a = items[i];
 		for (unsigned int j = i + 1; j < items.size(); ++j) {
 			if (items[j] == a) {
-				return j;
+				return { i, j };
 			}
 		}
 	}
-	return items.size();
+	return { 0, 0 };
 }
 
 template <typename T>
 bool has_duplicate(Span<const T> items) {
-	return find_duplicate(items) != items.size();
+	return find_duplicate(items).is_valid();
 }
 
 // Tests if POD items in an array are all the same.
 // Better tailored for more than hundred items that have power-of-two size.
 template <typename Item_T>
-inline bool is_uniform(const Item_T *p_data, size_t item_count) {
+inline bool is_uniform(const Item_T *p_data, const size_t item_count) {
+	// Testing uniformity of an empty buffer has no meaningful answer
+	ZN_ASSERT_RETURN_V(item_count > 0, false);
+
 	const Item_T v0 = p_data[0];
 
 	// typedef size_t Bucket_T;
@@ -158,8 +174,6 @@ inline bool is_uniform(const Item_T *p_data, size_t item_count) {
 	return true;
 }
 
-void print_data_hex(Span<const uint8_t> data);
-
 template <typename T>
 bool find(Span<const T> items, const T &v, size_t &out_index) {
 	unsigned int i = 0;
@@ -173,6 +187,24 @@ bool find(Span<const T> items, const T &v, size_t &out_index) {
 	return false;
 }
 
+template <typename T, typename TPredicate>
+bool find(Span<const T> items, size_t &out_index, TPredicate predicate) {
+	unsigned int i = 0;
+	for (const T &item : items) {
+		if (predicate(item)) {
+			out_index = i;
+			return true;
+		}
+		++i;
+	}
+	return false;
+}
+
+template <typename T, typename TPredicate, typename TAllocator>
+bool find(const std::vector<T, TAllocator> &vec, size_t &out_index, TPredicate predicate) {
+	return find(to_span_const(vec), out_index, predicate);
+}
+
 template <typename T>
 bool contains(Span<const T> items, const T &v) {
 	for (const T &item : items) {
@@ -181,6 +213,35 @@ bool contains(Span<const T> items, const T &v) {
 		}
 	}
 	return false;
+}
+
+template <typename T, typename TPredicate>
+bool contains(Span<const T> items, TPredicate predicate) {
+	for (const T &item : items) {
+		if (predicate(item)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+template <typename T, typename TPredicate, typename TAllocator>
+bool contains(const std::vector<T, TAllocator> &vec, TPredicate predicate) {
+	return contains(to_span_const(vec), predicate);
+}
+
+// Gets the number of elements in a compile-time known array
+template <typename T, int N>
+constexpr size_t count_of(const T (&)[N]) {
+	return N;
+}
+
+// Gets the number of characters in a compile-time known string
+template <int N>
+constexpr size_t string_literal_length(const char (&)[N]) {
+	// -1 to exclude the null-terminating character '\0'
+	static_assert(N > 0);
+	return N - 1;
 }
 
 } // namespace zylann

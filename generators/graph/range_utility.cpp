@@ -1,7 +1,8 @@
 #include "range_utility.h"
 #include "../../util/godot/classes/curve.h"
 #include "../../util/godot/classes/image.h"
-#include "../../util/string_funcs.h"
+#include "../../util/math/vector2i.h"
+#include "../../util/string/format.h"
 
 namespace zylann {
 
@@ -9,14 +10,17 @@ using namespace math;
 
 // Curve ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void get_curve_monotonic_sections(Curve &curve, std::vector<CurveMonotonicSection> &sections) {
+void get_curve_monotonic_sections(Curve &curve, StdVector<CurveMonotonicSection> &sections) {
+	const Interval curve_domain = zylann::godot::get_curve_domain(curve);
+	const float curve_domain_range = curve_domain.length();
+
 	const int res = curve.get_bake_resolution();
-	float prev_y = curve.sample_baked(0.f);
+	float prev_y = curve.sample_baked(curve_domain.min);
 
 	sections.clear();
 	CurveMonotonicSection section;
-	section.x_min = 0.f;
-	section.y_min = curve.sample_baked(0.f);
+	section.x_min = curve_domain.min;
+	section.y_min = curve.sample_baked(curve_domain.min);
 
 	float prev_x = 0.f;
 	bool current_stationary = true;
@@ -26,7 +30,7 @@ void get_curve_monotonic_sections(Curve &curve, std::vector<CurveMonotonicSectio
 	// made it apparent that our code didn't properly include the end of the curve)
 	for (int i = 1; i < res; ++i) {
 		// We do -1 because [res-1] is the last value in the baked array, therefore `x` must be 1
-		const float x = static_cast<float>(i) / (res - 1);
+		const float x = curve_domain.min + curve_domain_range * static_cast<float>(i) / (res - 1);
 		const float y = curve.sample_baked(x);
 		// Curve can sometimes appear flat but it still oscillates by very small amounts due to float imprecision
 		// which occurred during bake(). Attempting to workaround that by taking the error into account
@@ -55,20 +59,21 @@ void get_curve_monotonic_sections(Curve &curve, std::vector<CurveMonotonicSectio
 		prev_y = y;
 	}
 
-	// Forcing 1 because the iteration doesn't go up to `res`
-	section.x_max = 1.f;
+	// Forcing max because the iteration doesn't go up to `res`
+	section.x_max = curve_domain.max;
 	section.y_max = prev_y;
 	sections.push_back(section);
 }
 
-Interval get_curve_range(Curve &curve, const std::vector<CurveMonotonicSection> &sections, Interval x) {
+Interval get_curve_range(Curve &curve, const StdVector<CurveMonotonicSection> &sections, Interval x) {
 	// This implementation is linear. It assumes curves usually don't have many points.
 	// If a curve has too many points, we may consider dynamically choosing a different algorithm.
 	Interval y;
 	unsigned int i = 0;
-	if (x.min < sections[0].x_min) {
+	const float x_min = sections[0].x_min;
+	if (x.min < x_min) {
 		// X range starts before the curve's minimum X
-		y = Interval::from_single_value(curve.sample_baked(0.f));
+		y = Interval::from_single_value(curve.sample_baked(x_min));
 	} else {
 		// Find section from where the range starts
 		for (; i < sections.size(); ++i) {
@@ -107,12 +112,15 @@ Interval get_curve_range(Curve &curve, bool &is_monotonic_increasing) {
 	// TODO Would be nice to have the cache directly
 	const int res = curve.get_bake_resolution();
 	Interval range;
-	float prev_v = curve.sample_baked(0.f);
-	if (curve.sample_baked(1.f) > prev_v) {
+	const Interval curve_domain = zylann::godot::get_curve_domain(curve);
+	const float curve_domain_range = curve_domain.length();
+	float prev_v = curve.sample_baked(curve_domain.min);
+	if (curve.sample_baked(curve_domain.max) > prev_v) {
 		is_monotonic_increasing = true;
 	}
 	for (int i = 0; i < res; ++i) {
-		const float v = curve.sample_baked(static_cast<float>(i) / res);
+		const float a = curve_domain.min + curve_domain_range * static_cast<float>(i) / res;
+		const float v = curve.sample_baked(a);
 		range.add_point(v);
 		if (v < prev_v) {
 			is_monotonic_increasing = false;
@@ -129,11 +137,18 @@ Interval get_heightmap_range(const Image &im) {
 }
 
 Interval get_heightmap_range(const Image &im, Rect2i rect) {
+#ifdef DEBUG_ENABLED
 	ZN_ASSERT_RETURN_V_MSG(!im.is_compressed(), Interval(), format("Image format not supported: {}", im.get_format()));
+	ZN_ASSERT_RETURN_V_MSG(
+			Rect2i(0, 0, im.get_width(), im.get_height()).encloses(rect),
+			Interval(0, 0),
+			format("Rectangle out of range: image size is {}, rectangle is {}", im.get_size(), rect)
+	);
+#endif
 
 	Interval r;
 
-	r.min = im.get_pixel(0, 0).r;
+	r.min = im.get_pixel(rect.position.x, rect.position.y).r;
 	r.max = r.min;
 
 	const int max_x = rect.position.x + rect.size.x;

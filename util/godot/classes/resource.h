@@ -8,7 +8,7 @@
 using namespace godot;
 #endif
 
-namespace zylann {
+namespace zylann::godot {
 
 // Godot doesn't have configuration warnings yet on resources.
 // But when we add them and they are nested, it can be difficult to put them into context when the warning appears in
@@ -16,7 +16,11 @@ namespace zylann {
 // Context is a callable template returning something convertible to a String, so it only gets evaluated when there
 // actually are warnings.
 template <typename TResource, typename FContext>
-inline void get_resource_configuration_warnings(const TResource &resource, PackedStringArray &warnings, FContext f) {
+inline void get_resource_configuration_warnings(
+		const TResource &resource,
+		PackedStringArray &warnings,
+		FContext get_context_string_func
+) {
 	const int prev_size = warnings.size();
 
 	// This method is by us, not Godot.
@@ -24,7 +28,7 @@ inline void get_resource_configuration_warnings(const TResource &resource, Packe
 
 	const int current_size = warnings.size();
 	if (current_size != prev_size) {
-		String context = f();
+		String context = get_context_string_func();
 		for (int i = prev_size; i < current_size; ++i) {
 			String w = context + warnings[i];
 #if defined(ZN_GODOT)
@@ -36,6 +40,6 @@ inline void get_resource_configuration_warnings(const TResource &resource, Packe
 	}
 }
 
-} // namespace zylann
+} // namespace zylann::godot
 
 #endif // ZN_GODOT_RESOURCE_H

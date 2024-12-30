@@ -8,20 +8,22 @@
 using namespace godot;
 #endif
 
-#include <vector>
+#include "../core/version.h"
 
-namespace zylann {
+#include "../../containers/std_vector.h"
 
-struct GodotImportOption {
+namespace zylann::godot {
+
+struct ImportOptionWrapper {
 	PropertyInfo option;
 	Variant default_value;
 
-	GodotImportOption(PropertyInfo p_option, Variant p_default_value) :
+	ImportOptionWrapper(PropertyInfo p_option, Variant p_default_value) :
 			option(p_option), default_value(p_default_value) {}
 };
 
 // Exposes the same interface for different equivalent dictionary types, depending on the compiling target.
-struct GodotKeyValueWrapper {
+struct KeyValueWrapper {
 #if defined(ZN_GODOT)
 
 	const HashMap<StringName, Variant> &_map;
@@ -63,7 +65,7 @@ struct GodotKeyValueWrapper {
 };
 
 // Exposes the same interface for different equivalent lists of strings, depending on the compiling target.
-struct GodotStringListWrapper {
+struct StringListWrapper {
 #if defined(ZN_GODOT)
 	List<String> &_list;
 	inline void append(const String s) {
@@ -91,13 +93,29 @@ public:
 	String get_save_extension() const override;
 	String get_resource_type() const override;
 	float get_priority() const override;
-	// int get_import_order() const override;
+	int get_import_order() const override;
 	void get_import_options(const String &p_path, List<ImportOption> *r_options, int p_preset = 0) const override;
 	bool get_option_visibility(
-			const String &p_path, const String &p_option, const HashMap<StringName, Variant> &p_options) const override;
+			const String &p_path,
+			const String &p_option,
+			const HashMap<StringName, Variant> &p_options
+	) const override;
 
-	Error import(const String &p_source_file, const String &p_save_path, const HashMap<StringName, Variant> &p_options,
-			List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata = nullptr) override;
+	Error import(
+#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR >= 4
+			ResourceUID::ID p_source_id,
+#endif
+			const String &p_source_file,
+			const String &p_save_path,
+			const HashMap<StringName, Variant> &p_options,
+			List<String> *r_platform_variants,
+			List<String> *r_gen_files,
+			Variant *r_metadata = nullptr
+	) override;
+
+#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR >= 3
+	bool can_import_threaded() const override;
+#endif
 
 #elif defined(ZN_GODOT_EXTENSION)
 	String _get_importer_name() const override;
@@ -107,13 +125,23 @@ public:
 	int32_t _get_preset_count() const override;
 	String _get_save_extension() const override;
 	String _get_resource_type() const override;
-	double _get_priority() const override;
+	float _get_priority() const override;
+	int32_t _get_import_order() const override;
 	TypedArray<Dictionary> _get_import_options(const String &path, int32_t preset_index) const override;
-	bool _get_option_visibility(
-			const String &path, const StringName &option_name, const Dictionary &options) const override;
+	bool _get_option_visibility(const String &path, const StringName &option_name, const Dictionary &options)
+			const override;
 
-	Error _import(const String &source_file, const String &save_path, const Dictionary &options,
-			const TypedArray<String> &platform_variants, const TypedArray<String> &gen_files) const override;
+	Error _import(
+			const String &source_file,
+			const String &save_path,
+			const Dictionary &options,
+			const TypedArray<String> &platform_variants,
+			const TypedArray<String> &gen_files
+	) const override;
+
+#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR >= 3
+	bool _can_import_threaded() const override;
+#endif
 
 #endif
 
@@ -127,22 +155,34 @@ protected:
 	virtual int _zn_get_preset_count() const;
 	virtual String _zn_get_save_extension() const;
 	virtual String _zn_get_resource_type() const;
-	virtual double _zn_get_priority() const;
+	virtual float _zn_get_priority() const;
+	virtual int _zn_get_import_order() const;
+	virtual bool _zn_can_import_threaded() const;
 
 	virtual void _zn_get_import_options(
-			std::vector<GodotImportOption> &p_out_options, const String &p_path, int p_preset_index) const;
+			StdVector<ImportOptionWrapper> &p_out_options,
+			const String &p_path,
+			int p_preset_index
+	) const;
 
 	virtual bool _zn_get_option_visibility(
-			const String &p_path, const StringName &p_option_name, const GodotKeyValueWrapper p_options) const;
+			const String &p_path,
+			const StringName &p_option_name,
+			const KeyValueWrapper p_options
+	) const;
 
-	virtual Error _zn_import(const String &p_source_file, const String &p_save_path,
-			const GodotKeyValueWrapper p_options, GodotStringListWrapper p_out_platform_variants,
-			GodotStringListWrapper p_out_gen_files) const;
+	virtual Error _zn_import(
+			const String &p_source_file,
+			const String &p_save_path,
+			const KeyValueWrapper p_options,
+			StringListWrapper p_out_platform_variants,
+			StringListWrapper p_out_gen_files
+	) const;
 
 private:
 	static void _bind_methods() {}
 };
 
-} // namespace zylann
+} // namespace zylann::godot
 
 #endif // ZN_GODOT_EDITOR_IMPORT_PLUGIN_H

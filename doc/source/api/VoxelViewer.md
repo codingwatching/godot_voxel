@@ -13,12 +13,14 @@ The voxel world uses the position and options of all the [VoxelViewer](VoxelView
 ## Properties: 
 
 
-Type    | Name                                                                       | Default 
-------- | -------------------------------------------------------------------------- | --------
-`bool`  | [requires_collisions](#i_requires_collisions)                              | true    
-`bool`  | [requires_data_block_notifications](#i_requires_data_block_notifications)  | false   
-`bool`  | [requires_visuals](#i_requires_visuals)                                    | true    
-`int`   | [view_distance](#i_view_distance)                                          | 128     
+Type                                                                      | Name                                                                       | Default 
+------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------
+[bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)    | [enabled_in_editor](#i_enabled_in_editor)                                  | false   
+[bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)    | [requires_collisions](#i_requires_collisions)                              | true    
+[bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)    | [requires_data_block_notifications](#i_requires_data_block_notifications)  | false   
+[bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)    | [requires_visuals](#i_requires_visuals)                                    | true    
+[int](https://docs.godotengine.org/en/stable/classes/class_int.html)      | [view_distance](#i_view_distance)                                          | 128     
+[float](https://docs.godotengine.org/en/stable/classes/class_float.html)  | [view_distance_vertical_ratio](#i_view_distance_vertical_ratio)            | 1.0     
 <p></p>
 
 ## Methods: 
@@ -32,27 +34,40 @@ Return                                                                | Signatur
 
 ## Property Descriptions
 
-- [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_requires_collisions"></span> **requires_collisions** = true
+### [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_enabled_in_editor"></span> **enabled_in_editor** = false
+
+Sets whether this viewer will cause loading to occur in the editor. This is mainly intented for testing purposes.
+
+Note that streaming in editor can also be turned off on terrains.
+
+### [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_requires_collisions"></span> **requires_collisions** = true
 
 If set to `true`, the engine will generate classic collision shapes around this viewer.
 
-- [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_requires_data_block_notifications"></span> **requires_data_block_notifications** = false
+### [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_requires_data_block_notifications"></span> **requires_data_block_notifications** = false
 
+*(This property has no documentation)*
 
-- [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_requires_visuals"></span> **requires_visuals** = true
+### [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_requires_visuals"></span> **requires_visuals** = true
 
 If set to `true`, the engine will generate meshes around this viewer. This may be enabled for the local player.
 
-- [int](https://docs.godotengine.org/en/stable/classes/class_int.html)<span id="i_view_distance"></span> **view_distance** = 128
+### [int](https://docs.godotengine.org/en/stable/classes/class_int.html)<span id="i_view_distance"></span> **view_distance** = 128
 
 How far should voxels generate around this viewer.
 
+### [float](https://docs.godotengine.org/en/stable/classes/class_float.html)<span id="i_view_distance_vertical_ratio"></span> **view_distance_vertical_ratio** = 1.0
+
+Modifies vertical view distance to be a ratio of the [VoxelViewer.view_distance](VoxelViewer.md#i_view_distance) property. For example, if [VoxelViewer.view_distance](VoxelViewer.md#i_view_distance) is 100 and this property is 0.5, then horizontal view distance will be 100 and vertical view distance will be 50.
+
 ## Method Descriptions
 
-- [int](https://docs.godotengine.org/en/stable/classes/class_int.html)<span id="i_get_network_peer_id"></span> **get_network_peer_id**( ) 
+### [int](https://docs.godotengine.org/en/stable/classes/class_int.html)<span id="i_get_network_peer_id"></span> **get_network_peer_id**( ) 
 
+*(This method has no documentation)*
 
-- [void](#)<span id="i_set_network_peer_id"></span> **set_network_peer_id**( [int](https://docs.godotengine.org/en/stable/classes/class_int.html) id ) 
+### [void](#)<span id="i_set_network_peer_id"></span> **set_network_peer_id**( [int](https://docs.godotengine.org/en/stable/classes/class_int.html) id ) 
 
+*(This method has no documentation)*
 
-_Generated on Dec 31, 2023_
+_Generated on Aug 27, 2024_

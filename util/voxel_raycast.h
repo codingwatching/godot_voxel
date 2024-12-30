@@ -1,5 +1,8 @@
+#ifndef ZN_VOXEL_RAYCAST_H
+#define ZN_VOXEL_RAYCAST_H
+
 #include "../util/math/vector3i.h"
-//#include "../util/profiling.h"
+// #include "../util/profiling.h"
 #include "errors.h"
 #include "math/vector3.h"
 
@@ -29,10 +32,17 @@ struct VoxelRaycastState {
 
 // Runs the DDA algorithms in 3D.
 template <typename Vec3f_T, typename Predicate_F> // f(VoxelRaycastState) -> bool
-bool voxel_raycast(Vec3f_T ray_origin, Vec3f_T ray_direction, Predicate_F predicate, real_t max_distance,
-		Vector3i &out_hit_pos, Vector3i &out_prev_pos, float &out_distance_along_ray,
-		float &out_distance_along_ray_prev) {
-	//ZN_PROFILE_SCOPE();
+bool voxel_raycast(
+		Vec3f_T ray_origin,
+		Vec3f_T ray_direction,
+		Predicate_F predicate,
+		real_t max_distance,
+		Vector3i &out_hit_pos,
+		Vector3i &out_prev_pos,
+		float &out_distance_along_ray,
+		float &out_distance_along_ray_prev
+) {
+	// ZN_PROFILE_SCOPE();
 
 	ZN_ASSERT_RETURN_V(!math::has_nan(ray_origin), false);
 	ZN_ASSERT_RETURN_V(!math::has_nan(ray_direction), false);
@@ -52,7 +62,9 @@ bool voxel_raycast(Vec3f_T ray_origin, Vec3f_T ray_direction, Predicate_F predic
 
 	// Note : the grid is assumed to have 1-unit square cells.
 
+#ifdef DEBUG_ENABLED
 	ZN_ASSERT_RETURN_V(math::is_normalized(ray_direction), false); // Must be normalized
+#endif
 
 	/* Initialisation */
 
@@ -145,7 +157,7 @@ bool voxel_raycast(Vec3f_T ray_origin, Vec3f_T ray_direction, Predicate_F predic
 		if (tcross_x < tcross_y) {
 			if (tcross_x < tcross_z) {
 				// X collision
-				//hit.prevPos.x = hit.pos.x;
+				// hit.prevPos.x = hit.pos.x;
 				hit_pos.x += xi_step;
 				if (tcross_x > max_distance) {
 					return false;
@@ -154,7 +166,7 @@ bool voxel_raycast(Vec3f_T ray_origin, Vec3f_T ray_direction, Predicate_F predic
 				tcross_x += tdelta_x;
 			} else {
 				// Z collision (duplicate code)
-				//hit.prevPos.z = hit.pos.z;
+				// hit.prevPos.z = hit.pos.z;
 				hit_pos.z += zi_step;
 				if (tcross_z > max_distance) {
 					return false;
@@ -165,7 +177,7 @@ bool voxel_raycast(Vec3f_T ray_origin, Vec3f_T ray_direction, Predicate_F predic
 		} else {
 			if (tcross_y < tcross_z) {
 				// Y collision
-				//hit.prevPos.y = hit.pos.y;
+				// hit.prevPos.y = hit.pos.y;
 				hit_pos.y += yi_step;
 				if (tcross_y > max_distance) {
 					return false;
@@ -174,7 +186,7 @@ bool voxel_raycast(Vec3f_T ray_origin, Vec3f_T ray_direction, Predicate_F predic
 				tcross_y += tdelta_y;
 			} else {
 				// Z collision (duplicate code)
-				//hit.prevPos.z = hit.pos.z;
+				// hit.prevPos.z = hit.pos.z;
 				hit_pos.z += zi_step;
 				if (tcross_z > max_distance) {
 					return false;
@@ -195,3 +207,5 @@ bool voxel_raycast(Vec3f_T ray_origin, Vec3f_T ray_direction, Predicate_F predic
 }
 
 } // namespace zylann
+
+#endif // ZN_VOXEL_RAYCAST_H

@@ -1,7 +1,10 @@
 #ifndef VOXEL_GRAPH_RUNTIME_H
 #define VOXEL_GRAPH_RUNTIME_H
 
+#include "../../util/containers/fixed_array.h"
 #include "../../util/containers/span.h"
+#include "../../util/containers/std_unordered_map.h"
+#include "../../util/containers/std_vector.h"
 #include "../../util/godot/classes/ref_counted.h"
 #include "../../util/math/interval.h"
 #include "../../util/math/vector3f.h"
@@ -82,13 +85,13 @@ public:
 			uint16_t constant_fill_count = 0;
 		};
 
-		std::vector<OperationInfo> operations;
+		StdVector<OperationInfo> operations;
 
 		// Stores node IDs referring to the user-facing graph.
 		// Each index corresponds to operation indices.
 		// The same node can appear twice, because sometimes a user-facing node compiles as multiple nodes.
 		// It can also include some nodes not explicitely present in the user graph (like auto-inputs).
-		std::vector<uint32_t> debug_nodes;
+		StdVector<uint32_t> debug_nodes;
 
 		// Every operation before this index in the `operations` list will only depend on inputs tagged as "outer
 		// group". This is the index from which operations won't only depend on the outer group.
@@ -103,7 +106,7 @@ public:
 		// This list must be read using an advancing cursor, that moves up by the amount specified in `OperationInfo`.
 		// Note, it is preferable to use this for dynamic optimizations. Compile-time constants should use pinned
 		// buffers, or better, single values.
-		std::vector<ConstantFill> constant_fills;
+		StdVector<ConstantFill> constant_fills;
 
 		void clear() {
 			operations.clear();
@@ -131,6 +134,16 @@ public:
 			// TODO Just for convenience because STL bound checks aren't working in Godot 3
 			CRASH_COND(address >= buffers.size());
 			return ranges[address];
+		}
+
+		inline const math::Interval &get_range_const_ref(uint16_t address) const {
+			// TODO Just for convenience because STL bound checks aren't working in Godot 3
+			ZN_ASSERT(address < buffers.size());
+			return ranges[address];
+		}
+
+		inline uint32_t get_buffer_size() const {
+			return buffer_size;
 		}
 
 		void clear() {
@@ -163,11 +176,11 @@ public:
 	private:
 		friend class Runtime; // TODO Why is friend needed? This class is nested inside
 
-		std::vector<math::Interval> ranges;
-		std::vector<Buffer> buffers;
-		std::vector<BufferData> buffer_datas;
+		StdVector<math::Interval> ranges;
+		StdVector<Buffer> buffers;
+		StdVector<BufferData> buffer_datas;
 		// [execution_map_index] => microseconds
-		std::vector<uint32_t> debug_profiler_times;
+		StdVector<uint32_t> debug_profiler_times;
 
 		unsigned int buffer_size = 0;
 		unsigned int buffer_capacity = 0;
@@ -204,7 +217,11 @@ public:
 	void generate_single(State &state, Span<float> inputs, const ExecutionMap *execution_map) const;
 
 	void generate_set(
-			State &state, Span<Span<float>> p_inputs, bool skip_outer_group, const ExecutionMap *p_execution_map) const;
+			State &state,
+			Span<Span<float>> p_inputs,
+			bool skip_outer_group,
+			const ExecutionMap *p_execution_map
+	) const;
 
 #ifdef DEBUG_ENABLED
 	void debug_print_operations();
@@ -232,8 +249,12 @@ public:
 	// Call this after `analyze_range` if you intend to actually generate a set or single values in the area.
 	// This allows to use the execution map optimization, until you choose another area.
 	// (i.e when using this, querying values outside of the analyzed area may be invalid)
-	void generate_optimized_execution_map(const State &state, ExecutionMap &execution_map,
-			Span<const unsigned int> required_outputs, bool debug) const;
+	void generate_optimized_execution_map(
+			const State &state,
+			ExecutionMap &execution_map,
+			Span<const unsigned int> required_outputs,
+			bool debug
+	) const;
 
 	// Convenience function to require all outputs
 	void generate_optimized_execution_map(const State &state, ExecutionMap &execution_map, bool debug) const;
@@ -252,8 +273,11 @@ public:
 
 	class _ProcessContext {
 	public:
-		inline _ProcessContext(const Span<const uint16_t> inputs, const Span<const uint16_t> outputs,
-				const Span<const uint8_t> params) :
+		inline _ProcessContext(
+				const Span<const uint16_t> inputs,
+				const Span<const uint16_t> outputs,
+				const Span<const uint8_t> params
+		) :
 				_inputs(inputs), _outputs(outputs), _params(params) {}
 
 		template <typename T>
@@ -282,8 +306,13 @@ public:
 	// Functions usable by node implementations during execution
 	class ProcessBufferContext : public _ProcessContext {
 	public:
-		inline ProcessBufferContext(const Span<const uint16_t> inputs, const Span<const uint16_t> outputs,
-				const Span<const uint8_t> params, Span<Buffer> buffers, bool using_execution_map) :
+		inline ProcessBufferContext(
+				const Span<const uint16_t> inputs,
+				const Span<const uint16_t> outputs,
+				const Span<const uint8_t> params,
+				Span<Buffer> buffers,
+				bool using_execution_map
+		) :
 				_ProcessContext(inputs, outputs, params),
 				_buffers(buffers),
 				_using_execution_map(using_execution_map) {}
@@ -296,8 +325,11 @@ public:
 			// because it won't be filled with relevant data. If it is still used,
 			// then the result can be completely different from what the range analysis predicted.
 			const Buffer &b = _buffers[address];
-			ERR_FAIL_COND_V_MSG(_using_execution_map && !b.is_binding && b.local_users_count == 0, b,
-					"buffer marked as 'ignored' is still being used");
+			ERR_FAIL_COND_V_MSG(
+					_using_execution_map && !b.is_binding && b.local_users_count == 0,
+					b,
+					"buffer marked as 'ignored' is still being used"
+			);
 #endif
 			return _buffers[address];
 		}
@@ -323,8 +355,13 @@ public:
 	// Functions usable by node implementations during range analysis
 	class RangeAnalysisContext : public _ProcessContext {
 	public:
-		inline RangeAnalysisContext(const Span<const uint16_t> inputs, const Span<const uint16_t> outputs,
-				const Span<const uint8_t> params, Span<math::Interval> ranges, Span<Buffer> buffers) :
+		inline RangeAnalysisContext(
+				const Span<const uint16_t> inputs,
+				const Span<const uint16_t> outputs,
+				const Span<const uint8_t> params,
+				Span<math::Interval> ranges,
+				Span<Buffer> buffers
+		) :
 				_ProcessContext(inputs, outputs, params), _ranges(ranges), _buffers(buffers) {}
 
 		inline const math::Interval get_input(uint32_t i) const {
@@ -354,8 +391,14 @@ public:
 private:
 	struct Program;
 
-	static CompilationResult compile_preprocessed_graph(Program &program, const ProgramGraph &graph,
-			unsigned int input_count, Span<const uint32_t> input_node_ids, bool debug, const NodeTypeDB &type_db);
+	static CompilationResult compile_preprocessed_graph(
+			Program &program,
+			const ProgramGraph &graph,
+			unsigned int input_count,
+			Span<const uint32_t> input_node_ids,
+			bool debug,
+			const NodeTypeDB &type_db
+	);
 
 	bool is_operation_constant(const State &state, uint16_t op_address) const;
 
@@ -394,9 +437,9 @@ private:
 		};
 
 		// Indexes to the `nodes` array
-		std::vector<uint16_t> dependencies;
+		StdVector<uint16_t> dependencies;
 		// Nodes in the same order they would be in the default execution map (but indexes may not match)
-		std::vector<Node> nodes;
+		StdVector<Node> nodes;
 
 		inline void clear() {
 			dependencies.clear();
@@ -421,7 +464,7 @@ private:
 		//
 		// They should be laid out in the same order they will be run in, although it's not absolutely required.
 		// It's better to have it ordered because memory access will be more predictable.
-		std::vector<uint16_t> operations;
+		StdVector<uint16_t> operations;
 
 		// Describes dependencies between operations. It is generated at compile time.
 		// It is used to perform dynamic optimization in case some operations can be predicted as constant.
@@ -434,21 +477,21 @@ private:
 
 		// Heap-allocated parameters data, when too large to fit in `operations`.
 		// We keep a reference to them so they can be freed when the program is cleared.
-		std::vector<HeapResource> heap_resources;
+		StdVector<HeapResource> heap_resources;
 
 		// Heap-allocated parameters data, when too large to fit in `operations`.
 		// We keep a reference to them so they won't be freed until the program is cleared.
-		std::vector<Ref<RefCounted>> ref_resources;
+		StdVector<Ref<RefCounted>> ref_resources;
 
 		// Describes the list of buffers to prepare in `State` before the program can be run
-		std::vector<BufferSpec> buffer_specs;
+		StdVector<BufferSpec> buffer_specs;
 
 		// Address in `operations` from which operations will start to not only depend on inputs tagged as "outer
 		// group". It is used to optimize away calculations that would otherwise be the same in planar terrain use
 		// cases.
 		uint32_t inner_group_start_op_index;
 
-		std::vector<InputInfo> inputs;
+		StdVector<InputInfo> inputs;
 
 		FixedArray<OutputInfo, MAX_OUTPUTS> outputs;
 		unsigned int outputs_count = 0;
@@ -461,14 +504,14 @@ private:
 
 		// Associates a port from the expanded graph to its corresponding address within the compiled program.
 		// This is used for debugging intermediate values.
-		std::unordered_map<ProgramGraph::PortLocation, uint16_t> output_port_addresses;
+		StdUnorderedMap<ProgramGraph::PortLocation, uint16_t> output_port_addresses;
 
 		// If you have a port location from the original user graph, before querying `output_port_addresses`, remap
 		// it first, in case it got expanded to different nodes during compilation.
-		std::unordered_map<ProgramGraph::PortLocation, ProgramGraph::PortLocation> user_port_to_expanded_port;
+		StdUnorderedMap<ProgramGraph::PortLocation, ProgramGraph::PortLocation> user_port_to_expanded_port;
 
 		// Associates expanded graph ID to user graph node IDs.
-		std::unordered_map<uint32_t, uint32_t> expanded_node_id_to_user_node_id;
+		StdUnorderedMap<uint32_t, uint32_t> expanded_node_id_to_user_node_id;
 
 		// Result of the last compilation attempt. The program should not be run if it failed.
 		CompilationResult compilation_result;

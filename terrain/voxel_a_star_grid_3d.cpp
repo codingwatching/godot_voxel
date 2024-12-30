@@ -1,15 +1,18 @@
 #include "voxel_a_star_grid_3d.h"
 #include "../terrain/fixed_lod/voxel_terrain.h"
-// #include "../util/string_funcs.h"
+// #include "../util/string/format.h"
 #include "../constants/voxel_string_names.h"
 #include "../util/math/conv.h"
+#include "../util/string/format.h"
 
 namespace zylann::voxel {
+
+VoxelAStarGrid3DInternal::VoxelAStarGrid3DInternal() : _voxel_buffer(VoxelBuffer::ALLOCATOR_POOL) {}
 
 void VoxelAStarGrid3DInternal::init_cache() {
 	_grid_cache_size = math::ceildiv(get_region().size, Chunk::SIZE);
 	_grid_cache.resize(_grid_cache_size.x * _grid_cache_size.y * _grid_cache_size.z);
-	_grid_chunk_states.resize(_grid_cache.size());
+	_grid_chunk_states.resize_no_init(_grid_cache.size());
 	_grid_chunk_states.fill(false);
 	_voxel_buffer.create(Vector3iUtil::create(Chunk::SIZE));
 
@@ -32,7 +35,7 @@ void VoxelAStarGrid3DInternal::init_cache() {
 
 bool VoxelAStarGrid3DInternal::is_solid(Vector3i pos) {
 	// TODO We could align the cache with the voxel chunk grid to avoid more expensive copies across chunk borders
-	const Vector3i gpos = pos - get_region().pos;
+	const Vector3i gpos = pos - get_region().position;
 	const Vector3i cpos = gpos >> Chunk::SIZE_PO2;
 	const Vector3i rpos = gpos & Chunk::SIZE_MASK;
 
@@ -46,11 +49,11 @@ bool VoxelAStarGrid3DInternal::is_solid(Vector3i pos) {
 		ZN_PROFILE_SCOPE_NAMED("Caching voxels");
 		ZN_ASSERT(data != nullptr);
 
-		const VoxelBufferInternal::ChannelId channel_index = VoxelBufferInternal::CHANNEL_TYPE;
-		const Vector3i copy_origin = (cpos << Chunk::SIZE_PO2) + get_region().pos;
+		const VoxelBuffer::ChannelId channel_index = VoxelBuffer::CHANNEL_TYPE;
+		const Vector3i copy_origin = (cpos << Chunk::SIZE_PO2) + get_region().position;
 		data->copy(copy_origin, _voxel_buffer, 1 << channel_index);
 
-		if (_voxel_buffer.get_channel_compression(channel_index) == VoxelBufferInternal::COMPRESSION_UNIFORM) {
+		if (_voxel_buffer.get_channel_compression(channel_index) == VoxelBuffer::COMPRESSION_UNIFORM) {
 			if (_voxel_buffer.get_voxel(0, 0, 0, channel_index) != 0) {
 				chunk.solid_bits = 0xffffffffffffffff;
 			} else {
@@ -61,7 +64,7 @@ bool VoxelAStarGrid3DInternal::is_solid(Vector3i pos) {
 			chunk.solid_bits = 0;
 
 			switch (_voxel_buffer.get_channel_depth(channel_index)) {
-				case VoxelBufferInternal::DEPTH_8_BIT: {
+				case VoxelBuffer::DEPTH_8_BIT: {
 					Span<const uint8_t> values;
 					ZN_ASSERT(_voxel_buffer.get_channel_data(channel_index, values));
 					uint64_t i = 0;
@@ -72,7 +75,7 @@ bool VoxelAStarGrid3DInternal::is_solid(Vector3i pos) {
 					}
 				} break;
 
-				case VoxelBufferInternal::DEPTH_16_BIT: {
+				case VoxelBuffer::DEPTH_16_BIT: {
 					Span<const uint16_t> values;
 					ZN_ASSERT(_voxel_buffer.get_channel_data(channel_index, values));
 					uint64_t i = 0;
@@ -120,10 +123,18 @@ void VoxelAStarGrid3D::check_params(Vector3i from_position, Vector3i to_position
 		ZN_PRINT_WARNING("The region is empty or not defined, no path will be found");
 	}
 	if (!get_region().contains(from_position)) {
-		ZN_PRINT_WARNING("The current region does not contain the source position, no path will be found");
+		ZN_PRINT_WARNING(
+				format("The current region {} does not contain the source position {}, no path will be found",
+					   get_region(),
+					   from_position)
+		);
 	}
-	if (!get_region().contains(from_position)) {
-		ZN_PRINT_WARNING("The current region does not contain the destination, no path will be found");
+	if (!get_region().contains(to_position)) {
+		ZN_PRINT_WARNING(
+				format("The current region {} does not contain the destination {}, no path will be found",
+					   get_region(),
+					   to_position)
+		);
 	}
 }
 #endif
@@ -186,7 +197,7 @@ void VoxelAStarGrid3D::find_path_async(Vector3i from_position, Vector3i to_posit
 		}
 	};
 
-	Task *task = memnew(Task);
+	Task *task = ZN_NEW(Task);
 	task->astar = Ref<VoxelAStarGrid3D>(this);
 	task->from_position = from_position;
 	task->to_position = to_position;
@@ -200,7 +211,7 @@ bool VoxelAStarGrid3D::is_running_async() const {
 
 TypedArray<Vector3i> VoxelAStarGrid3D::debug_get_visited_positions() const {
 	ZN_ASSERT_RETURN_V(_is_running_async == false, TypedArray<Vector3i>());
-	std::vector<Vector3i> positions;
+	StdVector<Vector3i> positions;
 	_path_finder.debug_get_visited_points(positions);
 	return to_typed_array(to_span(positions));
 }
@@ -211,7 +222,7 @@ void VoxelAStarGrid3D::_b_set_region(AABB aabb) {
 
 AABB VoxelAStarGrid3D::_b_get_region() {
 	const Box3i region = get_region();
-	return AABB(to_vec3(region.pos), to_vec3(region.size));
+	return AABB(to_vec3(region.position), to_vec3(region.size));
 }
 
 // Intermediate method to enforce the signal to be emitted on the main thread
@@ -228,17 +239,20 @@ void VoxelAStarGrid3D::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("find_path", "from_position", "to_position"), &VoxelAStarGrid3D::find_path);
 	ClassDB::bind_method(
-			D_METHOD("find_path_async", "from_position", "to_position"), &VoxelAStarGrid3D::find_path_async);
+			D_METHOD("find_path_async", "from_position", "to_position"), &VoxelAStarGrid3D::find_path_async
+	);
 	ClassDB::bind_method(D_METHOD("is_running_async"), &VoxelAStarGrid3D::is_running_async);
 
 	ClassDB::bind_method(D_METHOD("debug_get_visited_positions"), &VoxelAStarGrid3D::debug_get_visited_positions);
 
 	// Internal
 	ClassDB::bind_method(
-			D_METHOD("_on_async_search_completed", "path"), &VoxelAStarGrid3D::_b_on_async_search_completed);
+			D_METHOD("_on_async_search_completed", "path"), &VoxelAStarGrid3D::_b_on_async_search_completed
+	);
 
 	ADD_SIGNAL(MethodInfo(
-			"async_search_completed", PropertyInfo(Variant::ARRAY, "name", PROPERTY_HINT_ARRAY_TYPE, "Vector3i")));
+			"async_search_completed", PropertyInfo(Variant::ARRAY, "path", PROPERTY_HINT_ARRAY_TYPE, "Vector3i")
+	));
 }
 
 } // namespace zylann::voxel

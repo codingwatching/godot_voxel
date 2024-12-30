@@ -1,4 +1,5 @@
 #include "test_island_finder.h"
+#include "../../util/containers/std_vector.h"
 #include "../../util/island_finder.h"
 #include "../testing.h"
 
@@ -38,10 +39,10 @@ void test_island_finder() {
 			;
 
 	const Vector3i grid_size(5, 5, 5);
-	ZN_TEST_ASSERT(Vector3iUtil::get_volume(grid_size) == strlen(cdata) / 2);
+	ZN_TEST_ASSERT(Vector3iUtil::get_volume_u64(grid_size) == (strlen(cdata) / 2));
 
-	std::vector<int> grid;
-	grid.resize(Vector3iUtil::get_volume(grid_size));
+	StdVector<int> grid;
+	grid.resize(Vector3iUtil::get_volume_u64(grid_size));
 	for (unsigned int i = 0; i < grid.size(); ++i) {
 		const char c = cdata[i * 2];
 		if (c == 'X') {
@@ -53,8 +54,8 @@ void test_island_finder() {
 		}
 	}
 
-	std::vector<uint8_t> output;
-	output.resize(Vector3iUtil::get_volume(grid_size));
+	StdVector<uint8_t> output;
+	output.resize(Vector3iUtil::get_volume_u64(grid_size));
 	unsigned int label_count;
 
 	IslandFinder island_finder;
@@ -65,7 +66,9 @@ void test_island_finder() {
 				CRASH_COND(i >= grid.size());
 				return grid[i] == 1;
 			},
-			to_span(output), &label_count);
+			to_span(output),
+			&label_count
+	);
 
 	// unsigned int i = 0;
 	// for (int z = 0; z < grid_size.z; ++z) {

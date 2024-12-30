@@ -3,6 +3,7 @@
 
 #include "../../util/containers/fixed_array.h"
 #include "../../util/containers/span.h"
+#include "../../util/containers/std_vector.h"
 #include "../../util/godot/core/dictionary.h"
 #include "../../util/macros.h"
 #include "../../util/math/vector2.h"
@@ -16,13 +17,12 @@
 #include "voxel_graph_runtime.h"
 
 #include <memory>
-#include <vector>
 
 ZN_GODOT_FORWARD_DECLARE(class Image)
 
 namespace zylann::voxel {
 
-class VoxelBufferInternal;
+class VoxelBuffer;
 
 // Uses an internal VoxelGraphFunction to generate voxel data.
 class VoxelGeneratorGraph : public VoxelGenerator {
@@ -62,8 +62,8 @@ public:
 
 	int get_used_channels_mask() const override;
 
-	Result generate_block(VoxelGenerator::VoxelQueryData &input) override;
-	bool generate_broad_block(VoxelGenerator::VoxelQueryData &input) override;
+	Result generate_block(VoxelGenerator::VoxelQueryData input) override;
+	bool generate_broad_block(VoxelGenerator::VoxelQueryData input) override;
 	// float generate_single(const Vector3i &position);
 	bool supports_single_generation() const override {
 		return true;
@@ -73,8 +73,15 @@ public:
 	}
 	VoxelSingleValue generate_single(Vector3i position, unsigned int channel) override;
 
-	void generate_series(Span<const float> positions_x, Span<const float> positions_y, Span<const float> positions_z,
-			unsigned int channel, Span<float> out_values, Vector3f min_pos, Vector3f max_pos) override;
+	void generate_series(
+			Span<const float> positions_x,
+			Span<const float> positions_y,
+			Span<const float> positions_z,
+			unsigned int channel,
+			Span<float> out_values,
+			Vector3f min_pos,
+			Vector3f max_pos
+	) override;
 
 	// Ref<Resource> duplicate(bool p_subresources) const ZN_OVERRIDE_UNLESS_GODOT_EXTENSION;
 
@@ -116,7 +123,7 @@ public:
 		uint32_t microseconds;
 	};
 
-	float debug_measure_microseconds_per_voxel(bool singular, std::vector<NodeProfilingInfo> *node_profiling_info);
+	float debug_measure_microseconds_per_voxel(bool singular, StdVector<NodeProfilingInfo> *node_profiling_info);
 
 	void debug_load_waves_preset();
 
@@ -147,9 +154,15 @@ private:
 		unsigned int output_buffer_index;
 	};
 
-	static void gather_indices_and_weights(Span<const WeightOutput> weight_outputs, const pg::Runtime::State &state,
-			Vector3i rmin, Vector3i rmax, int ry, VoxelBufferInternal &out_voxel_buffer,
-			FixedArray<uint8_t, 4> spare_indices);
+	static void gather_indices_and_weights(
+			Span<const WeightOutput> weight_outputs,
+			const pg::Runtime::State &state,
+			Vector3i rmin,
+			Vector3i rmax,
+			int ry,
+			VoxelBuffer &out_voxel_buffer,
+			FixedArray<uint8_t, 4> spare_indices
+	);
 
 	static void _bind_methods();
 
@@ -238,11 +251,11 @@ private:
 	RWLock _runtime_lock;
 
 	struct Cache {
-		std::vector<float> x_cache;
-		std::vector<float> y_cache;
-		std::vector<float> z_cache;
-		std::vector<float> input_sdf_slice_cache;
-		std::vector<float> input_sdf_full_cache;
+		StdVector<float> x_cache;
+		StdVector<float> y_cache;
+		StdVector<float> z_cache;
+		StdVector<float> input_sdf_slice_cache;
+		StdVector<float> input_sdf_full_cache;
 		// TODO Use the runtime and state from `VoxelGraphFunction`
 		pg::Runtime::State state;
 		pg::Runtime::ExecutionMap optimized_execution_map;

@@ -1,23 +1,23 @@
 #include "test_voxel_mesher_cubes.h"
 #include "../../meshers/cubes/voxel_mesher_cubes.h"
-#include "../../storage/voxel_buffer_internal.h"
+#include "../../storage/voxel_buffer.h"
 #include "../testing.h"
 
 namespace zylann::voxel::tests {
 
 void test_voxel_mesher_cubes() {
-	VoxelBufferInternal vb;
+	VoxelBuffer vb(VoxelBuffer::ALLOCATOR_DEFAULT);
 	vb.create(8, 8, 8);
-	vb.set_channel_depth(VoxelBufferInternal::CHANNEL_COLOR, VoxelBufferInternal::DEPTH_16_BIT);
-	vb.set_voxel(Color8(0, 255, 0, 255).to_u16(), Vector3i(3, 4, 4), VoxelBufferInternal::CHANNEL_COLOR);
-	vb.set_voxel(Color8(0, 255, 0, 255).to_u16(), Vector3i(4, 4, 4), VoxelBufferInternal::CHANNEL_COLOR);
-	vb.set_voxel(Color8(0, 0, 255, 128).to_u16(), Vector3i(5, 4, 4), VoxelBufferInternal::CHANNEL_COLOR);
+	vb.set_channel_depth(VoxelBuffer::CHANNEL_COLOR, VoxelBuffer::DEPTH_16_BIT);
+	vb.set_voxel(Color8(0, 255, 0, 255).to_u16(), Vector3i(3, 4, 4), VoxelBuffer::CHANNEL_COLOR);
+	vb.set_voxel(Color8(0, 255, 0, 255).to_u16(), Vector3i(4, 4, 4), VoxelBuffer::CHANNEL_COLOR);
+	vb.set_voxel(Color8(0, 0, 255, 128).to_u16(), Vector3i(5, 4, 4), VoxelBuffer::CHANNEL_COLOR);
 
 	Ref<VoxelMesherCubes> mesher;
 	mesher.instantiate();
 	mesher->set_color_mode(VoxelMesherCubes::COLOR_RAW);
 
-	VoxelMesher::Input input{ vb, nullptr, nullptr, Vector3i(), 0, false };
+	VoxelMesher::Input input{ vb, nullptr, Vector3i(), 0, false };
 	VoxelMesher::Output output;
 	mesher->build(output, input);
 

@@ -1,12 +1,12 @@
 #include "voxel_blocky_model.h"
+#include "../../util/containers/container_funcs.h"
 #include "../../util/godot/classes/array_mesh.h"
 #include "../../util/godot/classes/base_material_3d.h"
 #include "../../util/godot/classes/shader_material.h"
 #include "../../util/godot/core/array.h"
 #include "../../util/godot/core/string.h"
-#include "../../util/macros.h"
 #include "../../util/math/conv.h"
-#include "../../util/string_funcs.h"
+#include "../../util/string/format.h"
 #include "voxel_blocky_library.h"
 
 // TODO Only required because of MAX_MATERIALS... could be enough inverting that dependency
@@ -25,9 +25,11 @@ unsigned int VoxelBlockyModel::MaterialIndexer::get_or_create_index(const Ref<Ma
 	}
 #ifdef TOOLS_ENABLED
 	if (materials.size() == VoxelBlockyLibraryBase::MAX_MATERIALS) {
-		ZN_PRINT_ERROR(format("Maximum material count reached ({}), try reduce your number of materials by re-using "
-							  "them or using atlases.",
-				VoxelBlockyLibraryBase::MAX_MATERIALS));
+		ZN_PRINT_ERROR(
+				format("Maximum material count reached ({}), try reduce your number of materials by re-using "
+					   "them or using atlases.",
+					   VoxelBlockyLibraryBase::MAX_MATERIALS)
+		);
 	}
 #endif
 	const unsigned int ret = materials.size();
@@ -41,12 +43,12 @@ bool VoxelBlockyModel::_set(const StringName &p_name, const Variant &p_value) {
 	String property_name = p_name;
 
 	if (property_name.begins_with("material_override_")) {
-		const int index = property_name.substr(ZN_ARRAY_LENGTH("material_override_")).to_int();
+		const int index = property_name.substr(string_literal_length("material_override_")).to_int();
 		set_material_override(index, p_value);
 		return true;
 
 	} else if (property_name.begins_with("collision_enabled_")) {
-		const int index = property_name.substr(ZN_ARRAY_LENGTH("collision_enabled_")).to_int();
+		const int index = property_name.substr(string_literal_length("collision_enabled_")).to_int();
 		set_mesh_collision_enabled(index, p_value);
 		return true;
 	}
@@ -54,7 +56,7 @@ bool VoxelBlockyModel::_set(const StringName &p_name, const Variant &p_value) {
 	// LEGACY
 
 	if (property_name.begins_with("cube_tiles_")) {
-		String s = property_name.substr(ZN_ARRAY_LENGTH("cube_tiles_") - 1, property_name.length());
+		String s = property_name.substr(string_literal_length("cube_tiles_"), property_name.length());
 		Cube::Side side = VoxelBlockyModelCube::name_to_side(s);
 		if (side != Cube::SIDE_COUNT) {
 			Vector2 v = p_value;
@@ -87,12 +89,12 @@ bool VoxelBlockyModel::_get(const StringName &p_name, Variant &r_ret) const {
 	String property_name = p_name;
 
 	if (property_name.begins_with("material_override_")) {
-		const int index = property_name.substr(ZN_ARRAY_LENGTH("material_override_")).to_int();
+		const int index = property_name.substr(string_literal_length("material_override_")).to_int();
 		r_ret = get_material_override(index);
 		return true;
 
 	} else if (property_name.begins_with("collision_enabled_")) {
-		const int index = property_name.substr(ZN_ARRAY_LENGTH("collision_enabled_")).to_int();
+		const int index = property_name.substr(string_literal_length("collision_enabled_")).to_int();
 		r_ret = is_mesh_collision_enabled(index);
 		return true;
 	}
@@ -100,7 +102,7 @@ bool VoxelBlockyModel::_get(const StringName &p_name, Variant &r_ret) const {
 	// LEGACY
 
 	if (property_name.begins_with("cube_tiles_")) {
-		String s = property_name.substr(ZN_ARRAY_LENGTH("cube_tiles_") - 1, property_name.length());
+		String s = property_name.substr(string_literal_length("cube_tiles_"), property_name.length());
 		Cube::Side side = VoxelBlockyModelCube::name_to_side(s);
 		if (side != Cube::SIDE_COUNT) {
 			const Vector2f f = _legacy_properties.cube_tiles[side];
@@ -127,17 +129,23 @@ bool VoxelBlockyModel::_get(const StringName &p_name, Variant &r_ret) const {
 void VoxelBlockyModel::_get_property_list(List<PropertyInfo> *p_list) const {
 	if (_surface_count > 0) {
 		p_list->push_back(PropertyInfo(
-				Variant::NIL, "Material overrides", PROPERTY_HINT_NONE, "material_override_", PROPERTY_USAGE_GROUP));
+				Variant::NIL, "Material overrides", PROPERTY_HINT_NONE, "material_override_", PROPERTY_USAGE_GROUP
+		));
 
 		for (unsigned int i = 0; i < _surface_count; ++i) {
-			p_list->push_back(PropertyInfo(Variant::OBJECT, String("material_override_{0}").format(varray(i)),
+			p_list->push_back(PropertyInfo(
+					Variant::OBJECT,
+					String("material_override_{0}").format(varray(i)),
 					PROPERTY_HINT_RESOURCE_TYPE,
 					String("{0},{1}").format(
-							varray(BaseMaterial3D::get_class_static(), ShaderMaterial::get_class_static()))));
+							varray(BaseMaterial3D::get_class_static(), ShaderMaterial::get_class_static())
+					)
+			));
 		}
 
 		p_list->push_back(PropertyInfo(
-				Variant::NIL, "Mesh collision", PROPERTY_HINT_NONE, "collision_enabled_", PROPERTY_USAGE_GROUP));
+				Variant::NIL, "Mesh collision", PROPERTY_HINT_NONE, "collision_enabled_", PROPERTY_USAGE_GROUP
+		));
 
 		for (unsigned int i = 0; i < _surface_count; ++i) {
 			p_list->push_back(PropertyInfo(Variant::BOOL, String("collision_enabled_{0}").format(varray(i))));
@@ -178,6 +186,15 @@ Ref<Material> VoxelBlockyModel::get_material_override(int index) const {
 	return _surface_params[index].material_override;
 }
 
+bool VoxelBlockyModel::has_material_override() const {
+	for (const SurfaceParams &sp : _surface_params) {
+		if (sp.material_override.is_valid()) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void VoxelBlockyModel::set_mesh_collision_enabled(int surface_index, bool enabled) {
 	// TODO Can't check for `_surface_count` instead, because there is no guarantee about the order in which Godot will
 	// set properties when loading the resource. The mesh could be set later, so we can't know the number of surfaces.
@@ -192,22 +209,20 @@ bool VoxelBlockyModel::is_mesh_collision_enabled(int surface_index) const {
 	return _surface_params[surface_index].collision_enabled;
 }
 
-void VoxelBlockyModel::set_transparent(bool t) {
-	if (t) {
-		if (_transparency_index == 0) {
-			_transparency_index = 1;
-		}
-	} else {
-		_transparency_index = 0;
-	}
-}
-
 void VoxelBlockyModel::set_transparency_index(int i) {
 	_transparency_index = math::clamp(i, 0, 255);
 }
 
 void VoxelBlockyModel::set_culls_neighbors(bool cn) {
 	_culls_neighbors = cn;
+}
+
+void VoxelBlockyModel::set_lod_skirts_enabled(bool enabled) {
+	_lod_skirts = enabled;
+}
+
+bool VoxelBlockyModel::get_lod_skirts_enabled() const {
+	return _lod_skirts;
 }
 
 void VoxelBlockyModel::set_surface_count(unsigned int new_count) {
@@ -234,8 +249,11 @@ void VoxelBlockyModel::bake(BakedData &baked_data, bool bake_tangents, MaterialI
 	baked_data.is_random_tickable = _random_tickable;
 	baked_data.box_collision_mask = _collision_mask;
 	baked_data.box_collision_aabbs = _collision_aabbs;
+	baked_data.lod_skirts = _lod_skirts;
 
 	BakedData::Model &model = baked_data.model;
+
+	// Note: mesh rotation is not implemented here, it is done in derived classes.
 
 	// Set empty sides mask
 	model.empty_sides_mask = 0;
@@ -243,7 +261,7 @@ void VoxelBlockyModel::bake(BakedData &baked_data, bool bake_tangents, MaterialI
 		bool empty = true;
 		for (unsigned int surface_index = 0; surface_index < model.surface_count; ++surface_index) {
 			const BakedData::Surface &surface = model.surfaces[surface_index];
-			if (surface.side_indices[side].size() > 0) {
+			if (surface.sides[side].indices.size() > 0) {
 				empty = false;
 				break;
 			}
@@ -257,12 +275,12 @@ void VoxelBlockyModel::bake(BakedData &baked_data, bool bake_tangents, MaterialI
 	for (unsigned int surface_index = 0; surface_index < model.surface_count; ++surface_index) {
 		if (surface_index < _surface_count) {
 			const SurfaceParams &surface_params = _surface_params[surface_index];
-			const Ref<Material> material = surface_params.material_override;
-
 			BakedData::Surface &surface = model.surfaces[surface_index];
 
-			const unsigned int material_index = materials.get_or_create_index(material);
-			surface.material_id = material_index;
+			if (surface_params.material_override.is_valid()) {
+				const unsigned int material_index = materials.get_or_create_index(surface_params.material_override);
+				surface.material_id = material_index;
+			}
 
 			surface.collision_enabled = surface_params.collision_enabled;
 		}
@@ -284,8 +302,11 @@ void VoxelBlockyModel::_b_set_collision_aabbs(TypedArray<AABB> array) {
 		// ERR_FAIL_COND(v.get_type() != Variant::AABB);
 		// TODO "Add Element" in the Godot Array inspector always adds a null element even if the array is typed!
 		if (v.get_type() != Variant::AABB) {
-			ZN_PRINT_WARNING(format("Item {} of the array is not an AABB (found {}). It will be replaced.", i,
-					Variant::get_type_name(v.get_type())));
+			ZN_PRINT_WARNING(
+					format("Item {} of the array is not an AABB (found {}). It will be replaced.",
+						   i,
+						   Variant::get_type_name(v.get_type()))
+			);
 			array[i] = AABB(Vector3(), Vector3(1, 1, 1));
 		}
 	}
@@ -356,9 +377,9 @@ Ref<Mesh> VoxelBlockyModel::make_mesh_from_baked_data(const BakedData &baked_dat
 		// Get vertex and index count in the surface
 		unsigned int vertex_count = surface.positions.size();
 		unsigned int index_count = surface.indices.size();
-		for (unsigned int side = 0; side < surface.side_positions.size(); ++side) {
-			vertex_count += surface.side_positions[side].size();
-			index_count += surface.side_indices[side].size();
+		for (const BakedData::SideSurface &side_surface : surface.sides) {
+			vertex_count += side_surface.positions.size();
+			index_count += side_surface.indices.size();
 		}
 
 		// Allocate surface arrays
@@ -372,7 +393,7 @@ Ref<Mesh> VoxelBlockyModel::make_mesh_from_baked_data(const BakedData &baked_dat
 		vertices.resize(vertex_count);
 		normals.resize(vertex_count);
 		if (tangents_enabled) {
-			tangents.resize(vertex_count);
+			tangents.resize(vertex_count * 4);
 		}
 		colors.resize(vertex_count);
 		uvs.resize(vertex_count);
@@ -414,11 +435,12 @@ Ref<Mesh> VoxelBlockyModel::make_mesh_from_baked_data(const BakedData &baked_dat
 			++ii;
 		}
 
-		for (unsigned int side = 0; side < surface.side_positions.size(); ++side) {
-			Span<const Vector3f> side_positions = to_span(surface.side_positions[side]);
-			Span<const Vector2f> side_uvs = to_span(surface.side_uvs[side]);
-			Span<const int> side_indices = to_span(surface.side_indices[side]);
-			Span<const float> side_tangents = to_span(surface.side_tangents[side]);
+		for (unsigned int side = 0; side < surface.sides.size(); ++side) {
+			const BakedData::SideSurface &side_surface = surface.sides[side];
+			Span<const Vector3f> side_positions = to_span(side_surface.positions);
+			Span<const Vector2f> side_uvs = to_span(side_surface.uvs);
+			Span<const int> side_indices = to_span(side_surface.indices);
+			Span<const float> side_tangents = to_span(side_surface.tangents);
 			const Vector3 side_normal = to_vec3(Cube::g_side_normals[side]);
 
 			const unsigned int vi0 = vi;
@@ -495,14 +517,35 @@ void VoxelBlockyModel::rotate_collision_boxes_ortho(math::OrthoBasis ortho_basis
 	}
 }
 
-void VoxelBlockyModel::rotate_90(math::Axis axis, bool clockwise) {
-	ZN_PRINT_ERROR("Not implemented");
-	// Implemented in child classes
+void VoxelBlockyModel::set_mesh_ortho_rotation_index(int i) {
+	ZN_ASSERT_RETURN(i >= 0 && i < math::ORTHOGONAL_BASIS_COUNT);
+	if (i != int(_mesh_ortho_rotation)) {
+		_mesh_ortho_rotation = i;
+	}
 }
 
-void VoxelBlockyModel::rotate_ortho(math::OrthoBasis ortho_basis) {
-	ZN_PRINT_ERROR("Not implemented");
-	// Implemented in child classes
+int VoxelBlockyModel::get_mesh_ortho_rotation_index() const {
+	return _mesh_ortho_rotation;
+}
+
+void VoxelBlockyModel::rotate_90(math::Axis axis, bool clockwise) {
+	math::OrthoBasis ortho_basis = math::get_ortho_basis_from_index(_mesh_ortho_rotation);
+	ortho_basis.rotate_90(axis, clockwise);
+	_mesh_ortho_rotation = math::get_index_from_ortho_basis(ortho_basis);
+
+	rotate_collision_boxes_90(axis, clockwise);
+
+	emit_changed();
+}
+
+void VoxelBlockyModel::rotate_ortho(math::OrthoBasis p_ortho_basis) {
+	math::OrthoBasis ortho_basis = math::get_ortho_basis_from_index(_mesh_ortho_rotation);
+	ortho_basis = p_ortho_basis * ortho_basis;
+	_mesh_ortho_rotation = math::get_index_from_ortho_basis(ortho_basis);
+
+	rotate_collision_boxes_ortho(p_ortho_basis);
+
+	emit_changed();
 }
 
 void VoxelBlockyModel::_b_rotate_90(Vector3i::Axis axis, bool clockwise) {
@@ -510,7 +553,7 @@ void VoxelBlockyModel::_b_rotate_90(Vector3i::Axis axis, bool clockwise) {
 	rotate_90(math::Axis(axis), clockwise);
 }
 
-// void ortho_simplify(Span<const Vector3f> vertices, Span<const int> indices, std::vector<int> &output) {
+// void ortho_simplify(Span<const Vector3f> vertices, Span<const int> indices, StdVector<int> &output) {
 // TODO Optimization: implement mesh simplification based on axis-aligned triangles.
 // It could be very effective on mesh collisions with the blocky mesher.
 // }
@@ -520,14 +563,13 @@ void VoxelBlockyModel::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_color"), &VoxelBlockyModel::get_color);
 
 	ClassDB::bind_method(
-			D_METHOD("set_material_override", "index", "material"), &VoxelBlockyModel::set_material_override);
+			D_METHOD("set_material_override", "index", "material"), &VoxelBlockyModel::set_material_override
+	);
 	ClassDB::bind_method(D_METHOD("get_material_override", "index"), &VoxelBlockyModel::get_material_override);
 
-	ClassDB::bind_method(D_METHOD("set_transparent", "transparent"), &VoxelBlockyModel::set_transparent);
-	ClassDB::bind_method(D_METHOD("is_transparent"), &VoxelBlockyModel::is_transparent);
-
 	ClassDB::bind_method(
-			D_METHOD("set_transparency_index", "transparency_index"), &VoxelBlockyModel::set_transparency_index);
+			D_METHOD("set_transparency_index", "transparency_index"), &VoxelBlockyModel::set_transparency_index
+	);
 	ClassDB::bind_method(D_METHOD("get_transparency_index"), &VoxelBlockyModel::get_transparency_index);
 
 	ClassDB::bind_method(D_METHOD("set_culls_neighbors", "culls_neighbors"), &VoxelBlockyModel::set_culls_neighbors);
@@ -536,10 +578,13 @@ void VoxelBlockyModel::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_random_tickable"), &VoxelBlockyModel::is_random_tickable);
 	ClassDB::bind_method(D_METHOD("set_random_tickable"), &VoxelBlockyModel::set_random_tickable);
 
-	ClassDB::bind_method(D_METHOD("set_mesh_collision_enabled", "surface_index", "enabled"),
-			&VoxelBlockyModel::set_mesh_collision_enabled);
 	ClassDB::bind_method(
-			D_METHOD("is_mesh_collision_enabled", "surface_index"), &VoxelBlockyModel::is_mesh_collision_enabled);
+			D_METHOD("set_mesh_collision_enabled", "surface_index", "enabled"),
+			&VoxelBlockyModel::set_mesh_collision_enabled
+	);
+	ClassDB::bind_method(
+			D_METHOD("is_mesh_collision_enabled", "surface_index"), &VoxelBlockyModel::is_mesh_collision_enabled
+	);
 
 	ClassDB::bind_method(D_METHOD("set_collision_aabbs", "aabbs"), &VoxelBlockyModel::_b_set_collision_aabbs);
 	ClassDB::bind_method(D_METHOD("get_collision_aabbs"), &VoxelBlockyModel::_b_get_collision_aabbs);
@@ -547,27 +592,45 @@ void VoxelBlockyModel::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_collision_mask", "mask"), &VoxelBlockyModel::set_collision_mask);
 	ClassDB::bind_method(D_METHOD("get_collision_mask"), &VoxelBlockyModel::get_collision_mask);
 
+	ClassDB::bind_method(
+			D_METHOD("set_mesh_ortho_rotation_index", "i"), &VoxelBlockyModel::set_mesh_ortho_rotation_index
+	);
+	ClassDB::bind_method(D_METHOD("get_mesh_ortho_rotation_index"), &VoxelBlockyModel::get_mesh_ortho_rotation_index);
+
 	// Bound for editor purposes
 	ClassDB::bind_method(D_METHOD("rotate_90", "axis", "clockwise"), &VoxelBlockyModel::_b_rotate_90);
 
+	ClassDB::bind_method(D_METHOD("set_lod_skirts_enabled", "enabled"), &VoxelBlockyModel::set_lod_skirts_enabled);
+	ClassDB::bind_method(D_METHOD("get_lod_skirts_enabled"), &VoxelBlockyModel::get_lod_skirts_enabled);
+
 	// TODO Update to StringName in Godot 4
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "color"), "set_color", "get_color");
-	// TODO Might become obsolete
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "transparent", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE),
-			"set_transparent", "is_transparent");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "transparency_index"), "set_transparency_index", "get_transparency_index");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "culls_neighbors"), "set_culls_neighbors", "get_culls_neighbors");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "random_tickable"), "set_random_tickable", "is_random_tickable");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "lod_skirts_enabled"), "set_lod_skirts_enabled", "get_lod_skirts_enabled");
 
 	ADD_GROUP("Box collision", "");
 
 	// TODO What is the syntax `number:` in `hint_string` with `ARRAY`? It's old, hard to search usages in Godot's
 	// codebase, and I can't find it anywhere in the documentation
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "collision_aabbs", PROPERTY_HINT_TYPE_STRING,
-						 String::num_int64(Variant::AABB) + ":"),
-			"set_collision_aabbs", "get_collision_aabbs");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "collision_mask", PROPERTY_HINT_LAYERS_3D_PHYSICS), "set_collision_mask",
-			"get_collision_mask");
+	ADD_PROPERTY(
+			PropertyInfo(
+					Variant::ARRAY, "collision_aabbs", PROPERTY_HINT_TYPE_STRING, String::num_int64(Variant::AABB) + ":"
+			),
+			"set_collision_aabbs",
+			"get_collision_aabbs"
+	);
+	ADD_PROPERTY(
+			// TODO This collision mask might not actually be related to Godot standard physics.
+			// It is mostly used in voxel raycasts, box collision and maybe other things
+			PropertyInfo(Variant::INT, "collision_mask", PROPERTY_HINT_LAYERS_3D_PHYSICS),
+			"set_collision_mask",
+			"get_collision_mask"
+	);
+
+	// Note: rotation property is currently exposed only in derived classes.
+	// It will not necessarily be supported by all derived classes.
 
 	BIND_ENUM_CONSTANT(SIDE_NEGATIVE_X);
 	BIND_ENUM_CONSTANT(SIDE_POSITIVE_X);

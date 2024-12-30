@@ -2,7 +2,7 @@
 
 namespace zylann::voxel {
 
-bool VoxelStreamCache::load_voxel_block(Vector3i position, uint8_t lod_index, VoxelBufferInternal &out_voxels) {
+bool VoxelStreamCache::load_voxel_block(Vector3i position, uint8_t lod_index, VoxelBuffer &out_voxels) {
 	const Lod &lod = _cache[lod_index];
 
 	RWLockRead rlock(lod.rw_lock);
@@ -14,22 +14,30 @@ bool VoxelStreamCache::load_voxel_block(Vector3i position, uint8_t lod_index, Vo
 		return false;
 
 	} else {
+		const Block &block = it->second;
+		if (!block.has_voxels) {
+			// Has a block in cache but there is no voxel data
+			return false;
+		}
 		// In cache, serve it
 
-		const VoxelBufferInternal &vb = it->second.voxels;
 
 		// Copying is required since the cache has ownership on its data,
 		// and the requests wants us to populate the buffer it provides
-		vb.duplicate_to(out_voxels, true);
+		block.voxels.copy_to(out_voxels, true);
 
 		return true;
 	}
 }
 
-void VoxelStreamCache::save_voxel_block(Vector3i position, uint8_t lod_index, VoxelBufferInternal &voxels) {
+void VoxelStreamCache::save_voxel_block(Vector3i position, uint8_t lod_index, VoxelBuffer &voxels) {
 	Lod &lod = _cache[lod_index];
 	RWLockWrite wlock(lod.rw_lock);
 	auto it = lod.blocks.find(position);
+
+	ZN_ASSERT_RETURN_MSG(
+			!Vector3iUtil::is_empty_size(voxels.get_size()), "Saving voxel buffer with empty size is not expected. Bug?"
+	);
 
 	if (it == lod.blocks.end()) {
 		// Not cached yet, create an entry
@@ -37,7 +45,7 @@ void VoxelStreamCache::save_voxel_block(Vector3i position, uint8_t lod_index, Vo
 		b.position = position;
 		b.lod = lod_index;
 		// TODO Optimization: if we know the buffer is not shared, we could use move instead
-		voxels.duplicate_to(b.voxels, true);
+		voxels.copy_to(b.voxels, true);
 		b.has_voxels = true;
 		lod.blocks.insert(std::make_pair(position, std::move(b)));
 		++_count;
@@ -50,7 +58,10 @@ void VoxelStreamCache::save_voxel_block(Vector3i position, uint8_t lod_index, Vo
 }
 
 bool VoxelStreamCache::load_instance_block(
-		Vector3i position, uint8_t lod_index, UniquePtr<InstanceBlockData> &out_instances) {
+		Vector3i position,
+		uint8_t lod_index,
+		UniquePtr<InstanceBlockData> &out_instances
+) {
 	const Lod &lod = _cache[lod_index];
 	lod.rw_lock.read_lock();
 	auto it = lod.blocks.find(position);
@@ -78,7 +89,10 @@ bool VoxelStreamCache::load_instance_block(
 }
 
 void VoxelStreamCache::save_instance_block(
-		Vector3i position, uint8_t lod_index, UniquePtr<InstanceBlockData> instances) {
+		Vector3i position,
+		uint8_t lod_index,
+		UniquePtr<InstanceBlockData> instances
+) {
 	Lod &lod = _cache[lod_index];
 	RWLockWrite wlock(lod.rw_lock);
 	auto it = lod.blocks.find(position);

@@ -2,6 +2,7 @@
 #define ZN_FIXED_ARRAY_H
 
 #include "../errors.h"
+#include "span.h"
 
 namespace zylann {
 
@@ -148,6 +149,56 @@ inline void fill(FixedArray<T, N> &dst, const T v) {
 	for (unsigned int i = 0; i < dst.size(); ++i) {
 		dst[i] = v;
 	}
+}
+
+template <typename T, unsigned int N>
+inline bool find(const FixedArray<T, N> &a, const T &v, unsigned int &out_index) {
+	for (unsigned int i = 0; i < a.size(); ++i) {
+		if (a[i] == v) {
+			out_index = i;
+			return true;
+		}
+	}
+	return false;
+}
+
+template <typename T, unsigned int N>
+inline bool contains(const FixedArray<T, N> &a, const T &value_to_search) {
+	for (const T &v : a) {
+		if (v == value_to_search) {
+			return true;
+		}
+	}
+	return false;
+}
+
+template <typename T, unsigned int N>
+Span<T> to_span(FixedArray<T, N> &a) {
+	return Span<T>(a.data(), a.size());
+}
+
+template <typename T, unsigned int N>
+Span<const T> to_span(const FixedArray<T, N> &a) {
+	return Span<const T>(a.data(), a.size());
+}
+
+template <typename T, unsigned int N>
+Span<T> to_span(FixedArray<T, N> &a, unsigned int count) {
+	ZN_ASSERT(count <= a.size());
+	return Span<T>(a.data(), count);
+}
+
+// TODO Deprecate, now Span has a conversion constructor that can allow doing that
+template <typename T, unsigned int N>
+Span<const T> to_span_const(const FixedArray<T, N> &a, unsigned int count) {
+	ZN_ASSERT(count <= a.size());
+	return Span<const T>(a.data(), count);
+}
+
+// TODO Deprecate, now Span has a conversion constructor that can allow doing that
+template <typename T, unsigned int N>
+Span<const T> to_span_const(const FixedArray<T, N> &a) {
+	return Span<const T>(a.data(), 0, a.size());
 }
 
 } // namespace zylann

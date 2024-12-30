@@ -8,7 +8,7 @@
 
 ZN_GODOT_FORWARD_DECLARE(class World3D);
 
-namespace zylann {
+namespace zylann::godot {
 
 // Thin wrapper around static body API
 class DirectStaticBody : public zylann::NonCopyable {
@@ -25,7 +25,7 @@ public:
 	Ref<Shape3D> get_shape(int shape_index);
 	void set_world(World3D *world);
 	void set_shape_enabled(int shape_index, bool disabled);
-	void set_attached_object(Object *obj);
+	void set_attached_object(const Object *obj);
 	void set_collision_layer(int layer);
 	void set_collision_mask(int mask);
 
@@ -34,9 +34,9 @@ public:
 private:
 	RID _body;
 	Ref<Shape3D> _shape;
-	zylann::DirectMeshInstance _debug_mesh_instance;
+	DirectMeshInstance _debug_mesh_instance;
 };
 
-} // namespace zylann
+} // namespace zylann::godot
 
 #endif // DIRECT_STATIC_BODY_H

@@ -72,7 +72,7 @@ Basic generators may often not be suited to make a whole game from, but you don'
 
 Voxel graphs allow to represent a 3D density by connecting operation nodes together. It takes 3D coordinates (X, Y, Z), and computes the value of every voxel from them. For example it can do a simple 2D or 3D noise, which can be scaled, deformed, masked using other noises, curves or even images.
 
-A big inspiration of this approach comes again from sculpting of signed-distance-fields (every voxel stores the distance to the nearest surface), which is why the main output node may be an `SdfOutput`. A bunch of nodes are meant to work on SDF as well. However, it is not strictly necessary to respect perfect distances, as long as the result looks correct for a game, so most of the time it's easier to work with approximations.
+An inspiration of this approach comes again from sculpting of signed-distance-fields (every voxel stores the distance to the nearest surface), which is why the main output node is usually an `SdfOutput`. A bunch of nodes are meant to work on SDF as well. However, it is not strictly necessary to respect perfect distances, as long as the result looks correct for a game, so most of the time it's easier to work with approximations.
 
 !!! note
     Voxel graphs are half-way between programming 3D shaders and procedural design. It has similar speed to C++ generators but has only basic instructions, so there are some maths involved. This might get eased a bit in the future when more high-level nodes are added.
@@ -165,6 +165,57 @@ Currently, graph generators only work per voxel. That makes them good to generat
 A special `Relay` node exists to organize long connections between nodes. They do nothing on their own, they just redirect a connection. It also remains possible for a relay to have multiple destinations.
 
 ![Screenshot of a relay node](images/relay_node.webp)
+
+
+### Preview nodes
+
+It is possible to preview the output of nodes with the `SdfPreview` node. This node will display a slice of the 3D data as a greyscale image, or a colored image depending on its settings. This is useful to check if a branch is outputting expected values.
+
+!!! note
+    - Preview nodes will only work if the output they are connected to is also connected to an actual output of the graph.
+
+![Screenshot of a preview node showing the output of a plane node](images/graph_preview_node_plane.webp)
+
+In the example above, the preview shows the output of a `SdfPlane` node. Values are negative below the surface, positive above the surface, and increase gradually along the Y axis. As a result, previews show white above, and black below.
+
+By default, the node shows a slice along the XY plane, but you can change it to the XZ plane in case you need a top-down view, in the `Debug -> Preview Axes` menu on top of the editor.
+
+Here is the output for a sphere of radius 50:
+
+![Screenshot of a preview node showing the output of a sphere node](images/graph_preview_node_sphere.webp)
+
+By default, each pixel of the preview corresponds to 1 unit of space. You can zoom by holding the `CTRL` key and using the mouse wheel on top of the preview. You can also move around by holding `CTRL` and dragging the preview's viewport holding the middle mouse button.
+Pan & zoom locations can be reset to defaults by using the menu `Debug -> Preview Axes -> Reset Location`.
+
+![Screenshot of a preview node showing the output of a sphere node, zoomed in](images/graph_preview_node_sphere_pan_and_zoom.webp)
+
+Previews show black and white based on a specific range defined in their properties. By default, -1 is black, 1 is white (so 0 is actually grey). You can change that range by selecting the preview node and using the inspector.
+
+![Screenshot of a selected preview node and its min/max properties in the inspector](images/graph_preview_node_min_max_inspector.webp)
+
+When working with signed distance fields (SDF), preview nodes can also display values in a more specialized way. In the inspector, you can change the `mode` to `SDF`:
+
+![Screenshot of a preview node in SDF mode](images/graph_preview_node_sdf_inspector.webp)
+
+This mode shows negative values as blue (inside shape) and positive values as yellow (outside shape).
+It also renders "bands" of repeating gradients to better visualize how they propagate away from the surface. The length of those bands is controlled by `fraction period`.
+
+![Screenshot of a preview node in SDF mode showing sphere gradient fractions](images/graph_preview_node_sphere_gradients.webp)
+
+With a sphere, gradients are quite regular, which is usually best. But when using noise as signed distance field, you can notice how gradients actually evolve below and above the surface:
+
+![Screenshot of a preview node in SDF mode showing noise gradients](images/graph_preview_node_noise_sdf.webp)
+
+Noise is a lot more inconsistent. However, most of the time, this isn't a big deal. It depends on what operations you do with the terrain.
+If the "speed" of gradients varies too sharply, especially near the surface, it can be the cause of precision loss or blockyness in generated meshes. It can also be a problem when approximating the surface solely from SDF voxels or using sphere tracing. 
+
+### Scripting
+
+Graph generators can be modified from a script using the [VoxelGraphFunction](api/VoxelGraphFunction.md) API. This is useful for example if you design a base graph, and want to randomize noise seeds or adjust some constants. `VoxelGeneratorGraph` contains an instance of it as their "main" function. You can access the graph by calling `get_main_function()` on the generator.
+
+Nodes are identified by an ID, so you should give a name to nodes that you want to access so you can get their ID with `find_node_by_name`.
+
+Example in the Solar System demo: [https://github.com/Zylann/solar_system_demo/blob/1ec891db22b41a842d48ca0c0b1c4c7c9157f6bc/solar_system/solar_system_setup.gd#L306](https://github.com/Zylann/solar_system_demo/blob/1ec891db22b41a842d48ca0c0b1c4c7c9157f6bc/solar_system/solar_system_setup.gd#L306)
 
 
 Custom generator

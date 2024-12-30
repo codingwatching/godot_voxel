@@ -1,18 +1,17 @@
 #ifndef ZN_SPAN_H
 #define ZN_SPAN_H
 
-#include "fixed_array.h"
+#include "../errors.h"
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <vector>
 
 namespace zylann {
 
 // View into an array, referencing a pointer and a size.
 // STL equivalent would be std::span<T> in C++20
 template <typename T>
-class Span {
+class [[nodiscard]] Span {
 public:
 	inline Span() : _ptr(nullptr), _size(0) {}
 
@@ -51,7 +50,7 @@ public:
 	}
 
 	inline Span<T> sub(size_t from) const {
-		ZN_ASSERT(from < _size);
+		ZN_ASSERT(from <= _size);
 		return Span<T>(_ptr + from, _size - from);
 	}
 
@@ -104,14 +103,19 @@ public:
 		}
 	}
 
-	inline void copy_to(Span<T> other) const {
+	// Template because T could be const and TDst should not be
+	template <typename TDst>
+	inline void copy_to(Span<TDst> other) const {
 		ZN_ASSERT(other.size() == _size);
-		ZN_ASSERT(other._ptr != nullptr);
+		if (_size == 0) {
+			return;
+		}
+		ZN_ASSERT(other.data() != nullptr);
 		// for (size_t i = 0; i < _size; ++i) {
 		// 	other._ptr[i] = _ptr[i];
 		// }
 		// Should compile to memcpy if T is simple enough
-		std::copy(_ptr, _ptr + _size, other._ptr);
+		std::copy(_ptr, _ptr + _size, other.data());
 	}
 
 	inline bool overlaps(const Span<T> other) const {
@@ -209,78 +213,26 @@ private:
 	size_t _size;
 };
 
-template <typename T>
-Span<T> to_span(std::vector<T> &vec) {
-	return Span<T>(vec.data(), 0, vec.size());
-}
-
-template <typename T>
-Span<const T> to_span(const std::vector<T> &vec) {
-	return Span<const T>(vec.data(), 0, vec.size());
-}
-
-template <typename T>
-Span<T> to_span_from_position_and_size(std::vector<T> &vec, unsigned int pos, unsigned int size) {
-	ZN_ASSERT(pos + size <= vec.size());
-	return Span<T>(vec.data(), pos, pos + size);
-}
-
-template <typename T>
-Span<const T> to_span_from_position_and_size(const std::vector<T> &vec, unsigned int pos, unsigned int size) {
-	ZN_ASSERT(pos + size <= vec.size());
-	return Span<const T>(vec.data(), pos, pos + size);
-}
-
-// TODO Deprecate, now Span has a conversion constructor that can allow doing that
-template <typename T>
-Span<const T> to_span_const(const std::vector<T> &vec) {
-	return Span<const T>(vec.data(), 0, vec.size());
-}
-
-template <typename T, unsigned int N>
-Span<T> to_span(FixedArray<T, N> &a) {
-	return Span<T>(a.data(), a.size());
-}
-
-template <typename T, unsigned int N>
-Span<const T> to_span(const FixedArray<T, N> &a) {
-	return Span<const T>(a.data(), a.size());
-}
-
-template <typename T, unsigned int N>
-Span<T> to_span(FixedArray<T, N> &a, unsigned int count) {
-	ZN_ASSERT(count <= a.size());
-	return Span<T>(a.data(), count);
-}
-
-template <typename T, unsigned int N>
+template <typename T, size_t N>
 Span<T> to_span(std::array<T, N> &a, unsigned int count) {
 	ZN_ASSERT(count <= a.size());
 	return Span<T>(a.data(), count);
 }
 
-template <typename T, unsigned int N>
+template <typename T, size_t N>
 Span<T> to_span(std::array<T, N> &a) {
 	return Span<T>(a.data(), a.size());
-}
-
-// TODO Deprecate, now Span has a conversion constructor that can allow doing that
-template <typename T, unsigned int N>
-Span<const T> to_span_const(const FixedArray<T, N> &a, unsigned int count) {
-	ZN_ASSERT(count <= a.size());
-	return Span<const T>(a.data(), count);
-}
-
-// TODO Deprecate, now Span has a conversion constructor that can allow doing that
-template <typename T, unsigned int N>
-Span<const T> to_span_const(const FixedArray<T, N> &a) {
-	return Span<const T>(a.data(), 0, a.size());
 }
 
 // TODO Deprecate, now Span has a conversion constructor that can allow doing that
 template <typename T>
 Span<const T> to_span_const(const Span<T> &a) {
 	return Span<const T>(a.data(), 0, a.size());
+}
+
+template <typename T>
+inline Span<T> to_single_element_span(T &a) {
+	return Span<T>(&a, 1);
 }
 
 } // namespace zylann

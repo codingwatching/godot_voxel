@@ -21,7 +21,7 @@ void ShaderGenContext::require_lib_code(const char *lib_name, const char **code)
 	_code_gen.require_lib_code(lib_name, code);
 }
 
-StdString ShaderGenContext::add_uniform(ComputeShaderResource &&res) {
+StdString ShaderGenContext::add_uniform(std::shared_ptr<ComputeShaderResource> res) {
 	StdString name = format("u_vg_resource_{}", _uniforms.size());
 	_uniforms.push_back(ShaderParameter());
 	ShaderParameter &sp = _uniforms.back();

@@ -90,6 +90,7 @@ static bool auto_detect_threaded_graphics_resource_building_support() {
 	const ProjectSettings *project = ProjectSettings::get_singleton();
 	ZN_ASSERT_RETURN_V(project != nullptr, false);
 
+#if GODOT_VERSION_MAJOR == 4 && GODOT_VERSION_MINOR <= 7
 	// A headless DisplayServer installs the dummy rasterizer
 	// (DisplayServerHeadless::create_func -> RasterizerDummy::make_current()), whose storage is not
 	// safe for concurrent access from multiple threads. The project's rendering_method/
@@ -102,6 +103,7 @@ static bool auto_detect_threaded_graphics_resource_building_support() {
 	if (display_server == nullptr || display_server->get_name() == "headless") {
 		return false;
 	}
+#endif
 
 	const zylann::godot::RenderThreadModel rendering_thread_model = zylann::godot::get_render_thread_model(*project);
 	const zylann::godot::RenderMethod rendering_method = zylann::godot::get_current_rendering_method();

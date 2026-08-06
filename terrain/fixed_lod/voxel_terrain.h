@@ -119,9 +119,6 @@ public:
 
 	bool has_data_block(Vector3i position) const;
 
-	void set_run_stream_in_editor(bool enable);
-	bool is_stream_running_in_editor() const;
-
 	void set_bounds(Box3i box);
 	Box3i get_bounds() const;
 
@@ -360,7 +357,6 @@ private:
 	unsigned int _collision_layer = 1;
 	unsigned int _collision_mask = 1;
 	float _collision_margin = constants::DEFAULT_COLLISION_MARGIN;
-	bool _run_stream_in_editor = true;
 	// bool _stream_enabled = false;
 	bool _block_enter_notification_enabled = false;
 	bool _area_edit_notification_enabled = false;

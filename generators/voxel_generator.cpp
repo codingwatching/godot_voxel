@@ -314,6 +314,10 @@ void VoxelGenerator::clear_cache() {
 	// Optionally implemented in subclasses
 }
 
+bool VoxelGenerator::is_runnable() const {
+	return true;
+}
+
 void VoxelGenerator::_bind_methods() {
 	ClassDB::bind_method(
 			D_METHOD("generate_block", "out_buffer", "origin_in_voxels", "lod"), &VoxelGenerator::_b_generate_block

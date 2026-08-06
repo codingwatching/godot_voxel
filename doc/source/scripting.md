@@ -85,7 +85,7 @@ func _generate_block(buffer : VoxelBuffer, origin : Vector3i, lod : int) -> void
 ```
 
 !!! note
-    VoxelGeneratorScript subtypes do not necessarily need to be `@tool` scripts, but it is necessary if you make use of the "Run Stream in Editor" feature.
+    Generator scripts can run directly in the editor with tool mode, **but need extra caution**. For more info, see [tool scripts](editor.md#tool-scripts).
 
 In your terrain scene, add another script to a node, which will setup your generator when the game starts. Code might differ a bit depending on how you structure your scene.
 

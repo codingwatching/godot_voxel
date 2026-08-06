@@ -177,7 +177,8 @@ void VoxelNode::get_configuration_warnings(PackedStringArray &warnings) const {
 				// properly?
 				warnings.append(
 						ZN_TTR("Careful, don't edit your custom stream while it's running, "
-							   "it can cause crashes. Turn off `run_stream_in_editor` before doing so.")
+							   "it can cause crashes. To prevent it from running in the editor, remove tool mode from "
+							   "your script.")
 				);
 			} else {
 				warnings.append(ZN_TTR("The custom stream is not tool, the editor won't be able to use it."));
@@ -209,7 +210,8 @@ void VoxelNode::get_configuration_warnings(PackedStringArray &warnings) const {
 				// properly?
 				warnings.append(
 						ZN_TTR("Careful, don't edit your custom generator while it's running, "
-							   "it can cause crashes. Turn off `run_stream_in_editor` before doing so.")
+							   "it can cause crashes. To prevent it from running in the editor, remove tool mode from "
+							   "your script.")
 				);
 			} else {
 				can_check_generator_channels = false;

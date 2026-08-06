@@ -52,12 +52,12 @@ int VoxelGeneratorScript::get_used_channels_mask() const {
 }
 
 bool VoxelGeneratorScript::is_runnable() const {
-	Ref<Script> script = get_script();
-	if (script.is_null()) {
+	Ref<Script> my_script = get_script();
+	if (my_script.is_null()) {
 		return false;
 	}
 	if (Engine::get_singleton()->is_editor_hint()) {
-		return script->is_tool();
+		return my_script->is_tool();
 	}
 	return true;
 }

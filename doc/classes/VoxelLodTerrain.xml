@@ -179,12 +179,6 @@
 				Times are in microseconds.
 			</description>
 		</method>
-		<method name="get_voxel_tool">
-			<return type="VoxelTool" />
-			<description>
-				Creates an instance of [VoxelTool] bound to this volume. Allows to query and edit voxels.
-			</description>
-		</method>
 		<method name="is_area_meshed" qualifiers="const">
 			<return type="bool" />
 			<param index="0" name="area_in_voxels" type="AABB" />

@@ -2453,7 +2453,6 @@ void VoxelTerrain::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_mesh_block_size", "size"), &Self::set_mesh_block_size);
 
 	ClassDB::bind_method(D_METHOD("get_statistics"), &Self::_b_get_statistics);
-	ClassDB::bind_method(D_METHOD("get_voxel_tool"), &Self::get_voxel_tool);
 
 	ClassDB::bind_method(D_METHOD("save_modified_blocks"), &Self::_b_save_modified_blocks);
 	ClassDB::bind_method(D_METHOD("save_block", "position"), &Self::_b_save_block);

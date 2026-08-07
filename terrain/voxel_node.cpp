@@ -380,6 +380,8 @@ void VoxelNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_render_layers_mask", "mask"), &VoxelNode::set_render_layers_mask);
 	ClassDB::bind_method(D_METHOD("get_render_layers_mask"), &VoxelNode::get_render_layers_mask);
 
+	ClassDB::bind_method(D_METHOD("get_voxel_tool"), &VoxelNode::get_voxel_tool);
+
 	ClassDB::bind_method(D_METHOD("convert_to_nodes", "flags"), &VoxelNode::convert_to_nodes);
 
 	ADD_PROPERTY(

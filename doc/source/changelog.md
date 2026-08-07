@@ -12,6 +12,7 @@ Development - master branch
 
 - Improvements
     - Added compute shader caching (thanks to chalecampb #866)
+    - `VoxelNode`: exposes `get_voxel_tool` instead of it being repeated in its child classes.
     - `ZN_FastNoiseLite`: Editor: added support for noise analysis window, formerly present only on `FastNoise2` (This is mainly a debug tool for internal development of graph generators).
     - Editor: range analysis debugging now also shows actual min/max on outputs connected to `SdfPreview` nodes. This is mainly to investigate internal bugs.
 

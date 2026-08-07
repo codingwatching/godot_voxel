@@ -3847,7 +3847,6 @@ void VoxelLodTerrain::_bind_methods() {
 			D_METHOD("voxel_to_mesh_block_position", "voxel_position", "lod_index"), &Self::voxel_to_mesh_block_position
 	);
 
-	ClassDB::bind_method(D_METHOD("get_voxel_tool"), &Self::get_voxel_tool);
 	ClassDB::bind_method(D_METHOD("save_modified_blocks"), &Self::_b_save_modified_blocks);
 
 	ClassDB::bind_method(D_METHOD("is_area_meshed", "area_in_voxels", "lod_index"), &Self::_b_is_area_meshed);

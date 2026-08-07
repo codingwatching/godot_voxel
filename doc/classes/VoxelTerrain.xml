@@ -73,13 +73,6 @@
 			<description>
 			</description>
 		</method>
-		<method name="get_voxel_tool">
-			<return type="VoxelTool" />
-			<description>
-				Creates an instance of [VoxelTool] bound to this node, to access voxels and edition methods.
-				You can keep it in a member variable to avoid creating one again, as long as the node still exists.
-			</description>
-		</method>
 		<method name="has_data_block" qualifiers="const">
 			<return type="bool" />
 			<param index="0" name="block_position" type="Vector3i" />

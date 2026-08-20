@@ -25,7 +25,6 @@ Type                                                                            
 [Material](https://docs.godotengine.org/en/stable/classes/class_material.html)  | [material_override](#i_material_override)                                            |                                                                              
 [int](https://docs.godotengine.org/en/stable/classes/class_int.html)            | [max_view_distance](#i_max_view_distance)                                            | 128                                                                          
 [int](https://docs.godotengine.org/en/stable/classes/class_int.html)            | [mesh_block_size](#i_mesh_block_size)                                                | 16                                                                           
-[bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)          | [run_stream_in_editor](#i_run_stream_in_editor)                                      | true                                                                         
 [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)          | [use_gpu_generation](#i_use_gpu_generation)                                          | false                                                                        
 <p></p>
 
@@ -42,7 +41,6 @@ Return                                                                          
 [int](https://docs.godotengine.org/en/stable/classes/class_int.html)                            | [get_data_block_size](#i_get_data_block_size) ( ) const                                                                                                                                                                                                                      
 [Dictionary](https://docs.godotengine.org/en/stable/classes/class_dictionary.html)              | [get_statistics](#i_get_statistics) ( ) const                                                                                                                                                                                                                                
 [PackedInt32Array](https://docs.godotengine.org/en/stable/classes/class_packedint32array.html)  | [get_viewer_network_peer_ids_in_area](#i_get_viewer_network_peer_ids_in_area) ( [Vector3i](https://docs.godotengine.org/en/stable/classes/class_vector3i.html) area_origin, [Vector3i](https://docs.godotengine.org/en/stable/classes/class_vector3i.html) area_size ) const 
-[VoxelTool](VoxelTool.md)                                                                       | [get_voxel_tool](#i_get_voxel_tool) ( )                                                                                                                                                                                                                                      
 [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)                          | [has_data_block](#i_has_data_block) ( [Vector3i](https://docs.godotengine.org/en/stable/classes/class_vector3i.html) block_position ) const                                                                                                                                  
 [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)                          | [is_area_meshed](#i_is_area_meshed) ( [AABB](https://docs.godotengine.org/en/stable/classes/class_aabb.html) area_in_voxels ) const                                                                                                                                          
 [void](#)                                                                                       | [save_block](#i_save_block) ( [Vector3i](https://docs.godotengine.org/en/stable/classes/class_vector3i.html) position )                                                                                                                                                      
@@ -157,10 +155,6 @@ Values other than 16 and 32 are not supported.
 
 Note: this setting also affects [VoxelInstancer](VoxelInstancer.md) chunks.
 
-### [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_run_stream_in_editor"></span> **run_stream_in_editor** = true
-
-*(This property has no documentation)*
-
 ### [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_use_gpu_generation"></span> **use_gpu_generation** = false
 
 Enables GPU block generation, which can speed it up. This is only valid for generators that support it. Vulkan is required.
@@ -215,12 +209,6 @@ The returned dictionary has the following structure:
 
 *(This method has no documentation)*
 
-### [VoxelTool](VoxelTool.md)<span id="i_get_voxel_tool"></span> **get_voxel_tool**( ) 
-
-Creates an instance of [VoxelTool](VoxelTool.md) bound to this node, to access voxels and edition methods.
-
-You can keep it in a member variable to avoid creating one again, as long as the node still exists.
-
 ### [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_has_data_block"></span> **has_data_block**( [Vector3i](https://docs.godotengine.org/en/stable/classes/class_vector3i.html) block_position ) 
 
 *(This method has no documentation)*
@@ -261,4 +249,4 @@ Note that blocks getting unloaded as the viewer moves around can also trigger sa
 
 *(This method has no documentation)*
 
-_Generated on Aug 06, 2026_
+_Generated on Aug 20, 2026_

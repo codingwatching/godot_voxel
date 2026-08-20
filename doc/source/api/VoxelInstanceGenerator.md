@@ -240,4 +240,4 @@ When [voxel_texture_filter_enabled](VoxelInstanceGenerator.md#i_voxel_texture_fi
 
 *(This method has no documentation)*
 
-_Generated on Aug 06, 2026_
+_Generated on Aug 20, 2026_

@@ -6,7 +6,7 @@ Implements isosurface generation (smooth voxels) using the [Transvoxel](https://
 
 ## Description: 
 
-Uses the [Transvoxel](https://transvoxel.org/) algorithm to polygonizes smooth voxels. Note: if you want to use LOD, you will need special vertex shader code to properly render seams (otherwise they will render as thin sheets between chunks). Check [https://voxel-tools.readthedocs.io/en/latest/smooth_terrain/#transvoxel](https://voxel-tools.readthedocs.io/en/latest/smooth_terrain/#transvoxel) or demos featuring smooth terrain for more information.
+Uses the [Transvoxel](https://transvoxel.org/) algorithm to polygonize smooth voxels. Note: if you want to use LOD, you will need special vertex shader code to properly render seams (otherwise they will render as thin sheets between chunks). Check [https://voxel-tools.readthedocs.io/en/latest/smooth_terrain/#transvoxel](https://voxel-tools.readthedocs.io/en/latest/smooth_terrain/#transvoxel) or demos featuring smooth terrain for more information.
 
 ## Properties: 
 
@@ -79,4 +79,4 @@ When a marching cube cell is computed, vertices may be placed anywhere on edges 
 
 Generates only the part of the mesh that Transvoxel uses to connect surfaces with different level of detail. This method is mainly for testing purposes.
 
-_Generated on Aug 06, 2026_
+_Generated on Aug 20, 2026_

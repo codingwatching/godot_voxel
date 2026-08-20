@@ -74,4 +74,4 @@ This property has limitations: it is only implemented on [VoxelLodTerrain](Voxel
 
 *(This method has no documentation)*
 
-_Generated on Aug 06, 2026_
+_Generated on Aug 20, 2026_

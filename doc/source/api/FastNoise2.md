@@ -227,4 +227,4 @@ Gets the name of SIMD level.
 
 This method must be called after you change properties, so they can take effect.
 
-_Generated on Aug 06, 2026_
+_Generated on Aug 20, 2026_

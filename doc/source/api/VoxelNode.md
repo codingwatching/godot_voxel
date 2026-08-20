@@ -26,6 +26,7 @@ Type                                                                            
 Return                                                                      | Signature                                                                                                
 --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------
 [Node3D](https://docs.godotengine.org/en/stable/classes/class_node3d.html)  | [convert_to_nodes](#i_convert_to_nodes) ( [NodeConversionFlags](VoxelNode.md#enumerations) flags ) const 
+[VoxelTool](VoxelTool.md)                                                   | [get_voxel_tool](#i_get_voxel_tool) ( )                                                                  
 <p></p>
 
 ## Enumerations: 
@@ -91,4 +92,10 @@ GLTF: if your terrain uses [ShaderMaterial](https://docs.godotengine.org/en/stab
 
 LOD: if your terrain has LOD, you will only get a snapshot of which LODs are currently active. Detailed meshes will be centered around viewers, and have less and less details further away.
 
-_Generated on Aug 06, 2026_
+### [VoxelTool](VoxelTool.md)<span id="i_get_voxel_tool"></span> **get_voxel_tool**( ) 
+
+Creates an instance of [VoxelTool](VoxelTool.md) bound to this node, to access voxels and edition methods.
+
+You can keep it in a member variable to avoid creating one again, as long as the node still exists.
+
+_Generated on Aug 20, 2026_

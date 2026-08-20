@@ -78,4 +78,4 @@ Note that terrains save asynchronously, so flushing might not always fulfill you
 
 `block_position`: Position of the block in block coordinates within the specified LOD.
 
-_Generated on Aug 06, 2026_
+_Generated on Aug 20, 2026_

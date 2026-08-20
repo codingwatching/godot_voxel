@@ -341,4 +341,4 @@ Set a parameter of a node, using its name as it appears in the editor.
 
 Set a parameter of a node to null. This method only exists to workaround an issue with Godot's UndoRedo system. Prefer using [set_node_param](VoxelGraphFunction.md#i_set_node_param).
 
-_Generated on Aug 06, 2026_
+_Generated on Aug 20, 2026_

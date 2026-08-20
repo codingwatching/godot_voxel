@@ -103,4 +103,4 @@ Configures a way to apply color from voxel data.
 
 *(This method has no documentation)*
 
-_Generated on Aug 06, 2026_
+_Generated on Aug 20, 2026_

@@ -47,7 +47,6 @@ Type                                                                            
 [int](https://docs.godotengine.org/en/stable/classes/class_int.html)            | [normalmap_tile_resolution_max](#i_normalmap_tile_resolution_max)                                  | 8                                                                            
 [int](https://docs.godotengine.org/en/stable/classes/class_int.html)            | [normalmap_tile_resolution_min](#i_normalmap_tile_resolution_min)                                  | 4                                                                            
 [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)          | [normalmap_use_gpu](#i_normalmap_use_gpu)                                                          | false                                                                        
-[bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)          | [run_stream_in_editor](#i_run_stream_in_editor)                                                    | true                                                                         
 [float](https://docs.godotengine.org/en/stable/classes/class_float.html)        | [secondary_lod_distance](#i_secondary_lod_distance)                                                | 48.0                                                                         
 [StreamingSystem](VoxelLodTerrain.md#enumerations)                              | [streaming_system](#i_streaming_system)                                                            | STREAMING_SYSTEM_LEGACY_OCTREE (0)                                           
 [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)          | [threaded_update_enabled](#i_threaded_update_enabled)                                              | false                                                                        
@@ -77,7 +76,6 @@ Return                                                                          
 [int](https://docs.godotengine.org/en/stable/classes/class_int.html)                | [get_normalmap_generator_override_begin_lod_index](#i_get_normalmap_generator_override_begin_lod_index) ( ) const                                                                                                                                     
 [ProcessCallback](VoxelLodTerrain.md#enumerations)                                  | [get_process_callback](#i_get_process_callback) ( ) const                                                                                                                                                                                             
 [Dictionary](https://docs.godotengine.org/en/stable/classes/class_dictionary.html)  | [get_statistics](#i_get_statistics) ( ) const                                                                                                                                                                                                         
-[VoxelTool](VoxelTool.md)                                                           | [get_voxel_tool](#i_get_voxel_tool) ( )                                                                                                                                                                                                               
 [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)              | [is_area_meshed](#i_is_area_meshed) ( [AABB](https://docs.godotengine.org/en/stable/classes/class_aabb.html) area_in_voxels, [int](https://docs.godotengine.org/en/stable/classes/class_int.html) lod_index ) const                                   
 [VoxelSaveCompletionTracker](VoxelSaveCompletionTracker.md)                         | [save_modified_blocks](#i_save_modified_blocks) ( )                                                                                                                                                                                                   
 [void](#)                                                                           | [set_normalmap_generator_override](#i_set_normalmap_generator_override) ( [VoxelGenerator](VoxelGenerator.md) generator_override )                                                                                                                    
@@ -272,10 +270,6 @@ This is the resolution at which normalmaps will begin with, at the LOD level def
 
 Enables GPU detail normalmaps generation, which can speed it up. This is only valid for generators that support it. Vulkan is required.
 
-### [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_run_stream_in_editor"></span> **run_stream_in_editor** = true
-
-*(This property has no documentation)*
-
 ### [float](https://docs.godotengine.org/en/stable/classes/class_float.html)<span id="i_secondary_lod_distance"></span> **secondary_lod_distance** = 48.0
 
 Controls the size of each LOD above LOD 0, in voxels relative to those LODs (voxels of LOD N are twice as big than LOD N-1). Higher values allow to see further away before detail are decimated, but is more expensive.
@@ -451,10 +445,6 @@ The returned dictionary has the following structure:
 ```
 Times are in microseconds.
 
-### [VoxelTool](VoxelTool.md)<span id="i_get_voxel_tool"></span> **get_voxel_tool**( ) 
-
-Creates an instance of [VoxelTool](VoxelTool.md) bound to this volume. Allows to query and edit voxels.
-
 ### [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_is_area_meshed"></span> **is_area_meshed**( [AABB](https://docs.godotengine.org/en/stable/classes/class_aabb.html) area_in_voxels, [int](https://docs.godotengine.org/en/stable/classes/class_int.html) lod_index ) 
 
 Returns true if the area has been processed by meshing. It does not mean the area actually contains a mesh.
@@ -491,4 +481,4 @@ Converts a voxel position into a data block position for a specific LOD index.
 
 Converts a voxel position into a mesh block position for a specific LOD index.
 
-_Generated on Aug 06, 2026_
+_Generated on Aug 20, 2026_

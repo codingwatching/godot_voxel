@@ -12,7 +12,13 @@ jobs:
     with:
       # "stable" version tags exist, but they actually seem to mark the first commit that supported a given Godot
       # version. So if fixes were pushed after that, it wouldn't have them. So we have to target the branch instead.
-      godot-cpp-branch: 4.5
+      #
+      # Beyond 4.5, GodotCpp is supposed to support all Godot versions somehow.
+      # However at time of writing the readme says `master` is still in beta.
+      # Unfortunately 4.5 has an issue with GDCLASS triggering compiler warnings, and hasn't been cherry-picked:
+      # https://github.com/godotengine/godot-cpp/pull/1906
+      #
+      godot-cpp-branch: master
 
   dist:
     runs-on: ubuntu-22.04

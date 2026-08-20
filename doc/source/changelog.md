@@ -7,8 +7,8 @@ At the moment, this module doesn't have a distinct release schedule, so this cha
 
 I try to minimize breaking changes, but there are usually a few in each release which I list in detail, so watch out for that section.
 
-Development - master branch
------------------------------
+1.7
+----
 
 - Improvements
     - Added compute shader caching (thanks to chalecampb #866)

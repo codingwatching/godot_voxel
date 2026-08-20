@@ -69,7 +69,7 @@ godot_cpp_path = os.environ.get("GODOT_CPP_PATH", "D:/PROJETS/INFO/GODOT/Engine/
 # Dependency on GodotCpp.
 # Use the same cross-platform configurations.
 # TODO GDX: Make sure this isn't doing too much?
-env = SConscript(godot_cpp_path + "/SConstruct")
+env = SConscript(godot_cpp_path + "/SConstruct", {"api_version": "4.5"})
 
 # TODO GDX: Adding our variables produces a warning when provided.
 # "WARNING: Unknown SCons variables were passed and will be ignored"
